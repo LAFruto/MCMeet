@@ -29,6 +29,19 @@ export interface PageContext {
   data?: Record<string, unknown>;
 }
 
+// User Account types
+export interface UserAccount {
+  id: string;
+  name: string;
+  email: string;
+  role: "student" | "faculty" | "admin";
+  createdAt: Date;
+  lastLogin?: Date;
+  department?: string;
+  phone?: string;
+  status: "active" | "inactive";
+}
+
 // Faculty types
 export interface FacultyMember {
   id: number;
@@ -41,6 +54,7 @@ export interface FacultyMember {
   specializations: string[];
   nextAvailable: string;
   office?: string;
+  userId?: string; // Link to UserAccount
 }
 
 // Booking types

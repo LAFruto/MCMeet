@@ -13,7 +13,14 @@ export const metadata: Metadata = {
   title: "MCMeet",
   description: "AI-powered faculty booking system",
   icons: {
-    icon: "/mcmeet.svg",
+    icon: [
+      {
+        url: "/mcmeet.svg",
+        type: "image/svg+xml",
+      },
+    ],
+    shortcut: "/mcmeet.svg",
+    apple: "/mcmeet.svg",
   },
 };
 

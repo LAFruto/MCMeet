@@ -10,11 +10,8 @@ function getDateString(daysOffset: number = 0): string {
     date.getMonth(),
     date.getDate()
   );
-  return normalizedDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  });
+  // Use ISO date format for consistent parsing
+  return normalizedDate.toISOString().split("T")[0];
 }
 
 export const MOCK_MEETINGS: Meeting[] = [

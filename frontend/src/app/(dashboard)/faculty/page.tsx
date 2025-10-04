@@ -1,7 +1,16 @@
+import { Suspense } from "react";
 import { getFacultyMembers } from "@/lib/server/faculty-server";
 import { FacultyClient } from "./faculty-client";
+import { FacultyErrorBoundary } from "./index";
+import { FacultyLoadingSkeleton } from "./index";
 import { getAdminSession } from "@/lib/authz";
 
+/**
+ * Faculty Directory Page
+ *
+ * Admin-only page for managing faculty members in the system.
+ * Provides functionality for viewing, editing, and promoting users to faculty.
+ */
 export default async function FacultyPage() {
   // Require admin role
   await getAdminSession();
@@ -9,19 +18,12 @@ export default async function FacultyPage() {
   const faculty = await getFacultyMembers();
 
   return (
-    <main className="flex-1 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
-            Faculty Directory
-          </h1>
-          <p className="text-muted-foreground">
-            Browse and book appointments with faculty members
-          </p>
-        </div>
-
-        <FacultyClient initialData={faculty} />
-      </div>
+    <main className="flex-1 flex flex-col h-full overflow-hidden">
+      <FacultyErrorBoundary>
+        <Suspense fallback={<FacultyLoadingSkeleton />}>
+          <FacultyClient initialData={faculty} />
+        </Suspense>
+      </FacultyErrorBoundary>
     </main>
   );
 }

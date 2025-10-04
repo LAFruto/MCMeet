@@ -1,23 +1,25 @@
+import { Suspense } from "react";
 import { getUserBookings } from "@/lib/server/booking-server";
 import { AgendaClient } from "./agenda-client";
+import { AgendaErrorBoundary } from "./index";
+import { AgendaLoadingSkeleton } from "./index";
 
+/**
+ * Agenda Page
+ *
+ * Minimalist, read-only view of the user's schedule.
+ * Clean interface focused on viewing and navigation without editing capabilities.
+ */
 export default async function AgendaPage() {
   const meetings = await getUserBookings();
 
   return (
-    <main className="flex-1 p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
-            My Agenda
-          </h1>
-          <p className="text-muted-foreground">
-            Your schedule at a glance. Use the chat for detailed actions.
-          </p>
-        </div>
-
-        <AgendaClient meetings={meetings} />
-      </div>
+    <main className="flex-1 flex flex-col h-full overflow-hidden">
+      <AgendaErrorBoundary>
+        <Suspense fallback={<AgendaLoadingSkeleton />}>
+          <AgendaClient meetings={meetings} />
+        </Suspense>
+      </AgendaErrorBoundary>
     </main>
   );
 }

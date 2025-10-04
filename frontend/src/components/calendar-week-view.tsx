@@ -227,6 +227,12 @@ function formatDate(date: Date, format: "day" | "date" | "full" | "monthYear") {
 }
 
 function formatDateKey(date: Date): string {
+  // Validate that the date is valid
+  if (!date || isNaN(date.getTime())) {
+    // Return a safe fallback without logging to prevent console spam
+    return "Jan 01, 1970"; // Epoch date as safe fallback
+  }
+
   // Normalize to local timezone and create a date at midnight
   const normalizedDate = new Date(
     date.getFullYear(),
