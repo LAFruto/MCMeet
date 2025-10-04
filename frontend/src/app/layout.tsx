@@ -12,6 +12,9 @@ const poppins = Familjen_Grotesk({
 export const metadata: Metadata = {
   title: "MCMeet",
   description: "AI-powered faculty booking system",
+  icons: {
+    icon: "/mcmeet.svg",
+  },
 };
 
 const LIGHT_THEME_COLOR = "hsl(0 0% 100%)";

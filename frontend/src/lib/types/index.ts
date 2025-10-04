@@ -57,6 +57,7 @@ export interface Meeting {
   status: "scheduled" | "completed" | "cancelled";
   purpose?: string;
   location?: string;
+  scheduleType?: "meeting" | "event" | "task";
 }
 
 export interface BookingRequest {
@@ -88,5 +89,3 @@ export interface QuickAction {
   icon: React.ComponentType<{ className?: string }>;
   template: string;
 }
-
-
