@@ -2,11 +2,11 @@
 
 import { usePageContext } from "@/lib/hooks/use-chat";
 import { AgendaView } from "./agenda-view";
-import type { Meeting } from "@/lib/types";
+import type { Booking } from "@/lib/types";
 import { useAgendaView, useAgendaDataFromMeetings } from "./hooks";
 
 interface AgendaClientProps {
-  meetings: Meeting[];
+  meetings: Booking[];
 }
 
 /**

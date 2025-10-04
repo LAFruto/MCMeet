@@ -2,17 +2,17 @@
  * Calendar/Schedule types and interfaces
  */
 
-import type { Meeting } from "@/lib/types";
+import type { Booking } from "@/lib/types";
 
 export type ViewMode = "day" | "week" | "month";
-export type ScheduleType = "all" | "meeting" | "event" | "task";
+export type ScheduleType = "all" | "MEETING" | "EVENT" | "TASK";
 
 export interface CalendarEvent {
   id: string;
   title: string;
   startTime: Date;
   endTime: Date;
-  type: "meeting" | "event" | "task";
+  type: "MEETING" | "EVENT" | "TASK";
   location?: string;
   description?: string;
   attendees?: string[];
@@ -52,11 +52,13 @@ export interface MeetingFormData {
   description?: string;
   startTime: Date;
   endTime: Date;
-  location: string;
+  location?: string;
   attendees: string[];
-  type: "meeting" | "event" | "task";
+  type: "MEETING" | "EVENT" | "TASK";
   professorInvolved?: string;
   studentInvolved?: string;
+  purpose?: string;
+  notes?: string;
 }
 
 export interface CalendarFilters {
@@ -84,9 +86,9 @@ export interface CalendarClientState {
   selectedScheduleType: ScheduleType;
   activeFilters: CalendarFilters;
   isEditDialogOpen: boolean;
-  editingMeeting?: Meeting;
+  editingMeeting?: Booking;
   isDeleteDialogOpen: boolean;
-  deletingMeeting?: Meeting;
+  deletingMeeting?: Booking;
 }
 
 export interface CalendarUtils {
@@ -106,7 +108,7 @@ export interface CalendarUtils {
   };
 }
 
-export interface MeetingWithPosition extends Meeting {
+export interface BookingWithPosition extends Booking {
   position: {
     top: number;
     height: number;

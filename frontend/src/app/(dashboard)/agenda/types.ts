@@ -2,8 +2,13 @@
  * Agenda view types and interfaces (read-only)
  */
 
-export type AgendaViewMode = "day" | "week" | "month";
+export type AgendaViewMode = "list" | "day" | "week" | "month";
 export type AgendaScheduleType = "all" | "meeting" | "event" | "task";
+export type BookingRequestStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "cancelled";
 
 export interface AgendaEvent {
   id: string;
@@ -16,6 +21,31 @@ export interface AgendaEvent {
   attendees?: string[];
   color?: string;
   status?: "confirmed" | "tentative" | "cancelled";
+}
+
+export interface BookingRequest {
+  id: string;
+  title: string;
+  description?: string;
+  startTime: Date;
+  endTime: Date;
+  location?: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  facultyId: string;
+  facultyName: string;
+  facultyEmail: string;
+  status: BookingRequestStatus;
+  purpose: string;
+  createdAt: Date;
+  updatedAt: Date;
+  requestedAt: Date;
+  approvedAt?: Date;
+  approvedBy?: string;
+  rejectedAt?: Date;
+  rejectionReason?: string;
+  cancelledAt?: Date;
 }
 
 export interface AgendaTimeSlot {

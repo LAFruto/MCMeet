@@ -1,5 +1,9 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// MCMeet - Meeting Booking System
+// This schema supports a chatbot-driven booking system where:
+// 1. Users create bookings through chatbot interactions
+// 2. Admins monitor bookings via Sked and Agenda views
+// 3. Admins approve faculties for user selection
+// 4. Meetings and Bookings are the same entity (scheduled appointments)
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
@@ -14,22 +18,37 @@ datasource db {
 }
 
 model User {
-  id                String    @id
+  id                String     @id
   name              String
   email             String
-  emailVerified     Boolean   @default(false)
+  emailVerified     Boolean    @default(false)
   image             String?
-  role              String    @default("student") // "student" | "admin"
-  twoFactorEnabled  Boolean   @default(false)
+  role              UserRole   @default(STUDENT)
+  department        String?
+  phone             String?
+  status            UserStatus @default(ACTIVE)
+  lastLogin         DateTime?
+  twoFactorEnabled  Boolean    @default(false)
   twoFactorSecret   String?
-  twoFactorVerified Boolean   @default(false)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @default(now()) @updatedAt
-  sessions          Session[]
-  accounts          Account[]
+  twoFactorVerified Boolean    @default(false)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @default(now()) @updatedAt
+
+  // Relations
+  sessions               Session[]
+  accounts               Account[]
+  facultyProfile         Faculty?
+  studentBookings        Booking[]        @relation("StudentBookings")
+  facultyBookings        Booking[]        @relation("FacultyBookings")
+  sentMessages           ChatMessage[]    @relation("SentMessages")
+  receivedMessages       ChatMessage[]    @relation("ReceivedMessages")
+  chatSessions           ChatSession[]    @relation("ChatSessions")
+  bookingRequests        BookingRequest[] @relation("BookingRequests")
+  facultyBookingRequests BookingRequest[] @relation("FacultyBookingRequests")
 
   @@unique([email])
   @@index([role])
+  @@index([department])
   @@map("user")
 }
 
@@ -76,4 +95,199 @@ model Verification {
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
+}
+
+// Enums
+enum UserRole {
+  STUDENT
+  FACULTY
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ScheduleType {
+  MEETING
+  EVENT
+  TASK
+}
+
+enum ChatMessageType {
+  TEXT
+  SYSTEM
+  QUICK_ACTION
+  BOOKING_REQUEST
+  MEETING_REMINDER
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// Faculty Profile Model
+// Faculty model - represents faculty members that can be booked
+model Faculty {
+  id              String        @id @default(cuid())
+  userId          String        @unique
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department      String
+  position        String
+  specializations String[]
+  office          String?
+  officeHours     OfficeHours[]
+  availability    String        @default("Mon-Fri, 9AM-5PM")
+  status          String        @default("Available") // Available, Busy, Away
+  bio             String?
+  isApproved      Boolean       @default(false) // Admin approval status
+  approvedAt      DateTime? // When admin approved this faculty
+  approvedBy      String? // Admin who approved this faculty
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([department])
+  @@index([status])
+  @@map("faculty")
+}
+
+// Office Hours Model
+model OfficeHours {
+  id        String   @id @default(cuid())
+  facultyId String
+  faculty   Faculty  @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  dayOfWeek String // Monday, Tuesday, etc.
+  startTime String // "09:00"
+  endTime   String // "17:00"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([facultyId, dayOfWeek])
+  @@map("office_hours")
+}
+
+// Booking Model
+// Booking model - represents scheduled appointments created via chatbot
+model Booking {
+  id           String        @id @default(cuid())
+  title        String // Booking title/subject
+  description  String? // Additional booking details
+  startTime    DateTime // When the booking starts
+  endTime      DateTime // When the booking ends
+  location     String? // Meeting location (physical or virtual)
+  status       MeetingStatus @default(SCHEDULED) // Booking status
+  scheduleType ScheduleType  @default(MEETING) // Type of booking
+  purpose      String? // Purpose of the meeting/booking
+  notes        String? // Admin notes about the booking
+
+  // Relations
+  studentId String
+  student   User   @relation("StudentBookings", fields: [studentId], references: [id], onDelete: Cascade)
+  facultyId String
+  faculty   User   @relation("FacultyBookings", fields: [facultyId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  cancelledAt DateTime?
+  completedAt DateTime?
+
+  @@index([studentId])
+  @@index([facultyId])
+  @@index([startTime])
+  @@index([status])
+  @@map("booking")
+}
+
+// Chat Session Model
+model ChatSession {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation("ChatSessions", fields: [userId], references: [id], onDelete: Cascade)
+  title         String?
+  isActive      Boolean   @default(true)
+  context       Json? // Store page context, filters, etc.
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastMessageAt DateTime?
+
+  // Relations
+  messages ChatMessage[]
+
+  @@index([userId])
+  @@index([isActive])
+  @@map("chat_session")
+}
+
+// Chat Message Model
+model ChatMessage {
+  id         String          @id @default(cuid())
+  sessionId  String
+  session    ChatSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  senderId   String
+  sender     User            @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String?
+  receiver   User?           @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: SetNull)
+  content    String
+  type       ChatMessageType @default(TEXT)
+  metadata   Json? // Store additional data like quick actions, booking details, etc.
+  isRead     Boolean         @default(false)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([sessionId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+  @@map("chat_message")
+}
+
+// Booking Request Model
+model BookingRequest {
+  id          String        @id @default(cuid())
+  studentId   String
+  student     User          @relation("BookingRequests", fields: [studentId], references: [id], onDelete: Cascade)
+  facultyId   String
+  faculty     User          @relation("FacultyBookingRequests", fields: [facultyId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  location    String?
+  purpose     String
+  status      BookingStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  respondedAt DateTime?
+
+  @@index([studentId])
+  @@index([facultyId])
+  @@index([status])
+  @@map("booking_request")
+}
+
+// Department Model
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("department")
 }

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Search,
-  User,
+  User as UserIcon,
   Mail,
   Phone,
   Clock,
@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { UserAccount } from "@/lib/types";
+import type { User } from "@/lib/types";
 import { MOCK_USER_ACCOUNTS } from "@/app/(dashboard)/faculty/mock-data";
 import { FACULTY_CONSTANTS } from "@/app/(dashboard)/faculty/constants";
 
@@ -42,7 +42,7 @@ export function PromoteUserDialog({
   onPromote,
 }: PromoteUserDialogProps) {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
-  const [selectedUser, setSelectedUser] = useState<UserAccount | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
     position: "",
@@ -61,7 +61,7 @@ export function PromoteUserDialog({
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleUserSelect = (user: UserAccount) => {
+  const handleUserSelect = (user: User) => {
     setSelectedUser(user);
     setFormData((prev) => ({
       ...prev,
@@ -228,7 +228,7 @@ export function PromoteUserDialog({
             {/* Position Field */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
               <div className="flex items-center gap-2 w-full sm:w-24">
-                <User className="h-4 w-4 text-muted-foreground" />
+                <UserIcon className="h-4 w-4 text-muted-foreground" />
                 <Label className="text-xs">Position</Label>
               </div>
               <Input

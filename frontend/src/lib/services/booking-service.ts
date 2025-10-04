@@ -1,7 +1,7 @@
 import { apiClient } from "./api-client";
 import { API_ENDPOINTS } from "../config/api";
-import { MOCK_MEETINGS } from "../constants/meeting-data";
-import type { Meeting, BookingRequest } from "../types";
+import { MOCK_BOOKINGS } from "../constants/booking-data";
+import type { Booking, BookingRequest } from "../types";
 
 /**
  * Booking service - handles all booking-related API calls
@@ -11,37 +11,37 @@ export const bookingService = {
   /**
    * Get all bookings for current user
    */
-  async getUserBookings(): Promise<Meeting[]> {
+  async getUserBookings(): Promise<Booking[]> {
     // TODO: Replace with actual API call when backend is ready
-    // const response = await apiClient.get<Meeting[]>(API_ENDPOINTS.USER_BOOKINGS);
+    // const response = await apiClient.get<Booking[]>(API_ENDPOINTS.USER_BOOKINGS);
     // return response.data;
 
     // Mock implementation
     await new Promise((resolve) => setTimeout(resolve, 500));
-    return MOCK_MEETINGS;
+    return MOCK_BOOKINGS;
   },
 
   /**
    * Get booking by ID
    */
-  async getById(id: number): Promise<Meeting | null> {
+  async getById(id: string): Promise<Booking | null> {
     // TODO: Replace with actual API call
-    // const response = await apiClient.get<Meeting>(
+    // const response = await apiClient.get<Booking>(
     //   API_ENDPOINTS.BOOKING_BY_ID(id)
     // );
     // return response.data;
 
     // Mock implementation
     await new Promise((resolve) => setTimeout(resolve, 300));
-    return MOCK_MEETINGS.find((m) => m.id === id) || null;
+    return MOCK_BOOKINGS.find((booking) => booking.id === id) || null;
   },
 
   /**
    * Create a new booking
    */
-  async create(booking: BookingRequest): Promise<Meeting> {
+  async create(booking: BookingRequest): Promise<Booking> {
     // TODO: Replace with actual API call
-    // const response = await apiClient.post<Meeting>(
+    // const response = await apiClient.post<Booking>(
     //   API_ENDPOINTS.CREATE_BOOKING,
     //   booking
     // );
@@ -49,26 +49,27 @@ export const bookingService = {
 
     // Mock implementation
     await new Promise((resolve) => setTimeout(resolve, 800));
-    const newMeeting: Meeting = {
-      id: Date.now(),
-      title: `Meeting with Faculty`,
+    const newBooking: Booking = {
+      id: `booking-${Date.now()}`,
+      title: booking.title || `Meeting with Faculty`,
       facultyId: booking.facultyId,
-      facultyName: "Faculty Member",
-      studentId: "STU001",
-      studentName: "John Doe",
-      date: booking.date,
+      studentId: booking.studentId,
       startTime: booking.startTime,
       endTime: booking.endTime,
-      status: "scheduled",
-      purpose: booking.purpose,
+      status: "SCHEDULED",
+      scheduleType: "MEETING",
+      purpose: booking.description,
+      location: booking.location || "Online",
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
-    return newMeeting;
+    return newBooking;
   },
 
   /**
    * Cancel a booking
    */
-  async cancel(id: number): Promise<boolean> {
+  async cancel(id: string): Promise<boolean> {
     // TODO: Replace with actual API call
     // await apiClient.post(API_ENDPOINTS.CANCEL_BOOKING(id));
     // return true;
@@ -82,28 +83,27 @@ export const bookingService = {
    * Reschedule a booking
    */
   async reschedule(
-    id: number,
-    newDate: string,
-    newStartTime: string,
-    newEndTime: string
-  ): Promise<Meeting> {
+    id: string,
+    newStartTime: Date,
+    newEndTime: Date
+  ): Promise<Booking> {
     // TODO: Replace with actual API call
-    // const response = await apiClient.post<Meeting>(
+    // const response = await apiClient.post<Booking>(
     //   API_ENDPOINTS.RESCHEDULE_BOOKING(id),
-    //   { date: newDate, startTime: newStartTime, endTime: newEndTime }
+    //   { startTime: newStartTime, endTime: newEndTime }
     // );
     // return response.data;
 
     // Mock implementation
     await new Promise((resolve) => setTimeout(resolve, 600));
-    const meeting = MOCK_MEETINGS.find((m) => m.id === id);
-    if (!meeting) throw new Error("Meeting not found");
+    const booking = MOCK_BOOKINGS.find((b) => b.id === id);
+    if (!booking) throw new Error("Booking not found");
 
     return {
-      ...meeting,
-      date: newDate,
+      ...booking,
       startTime: newStartTime,
       endTime: newEndTime,
+      updatedAt: new Date(),
     };
   },
 };

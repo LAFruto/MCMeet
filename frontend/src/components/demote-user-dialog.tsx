@@ -10,13 +10,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AlertTriangle, User, ArrowDown } from "lucide-react";
-import type { Faculty } from "./faculty-data-table";
+import type { FacultyTableData } from "@/app/(dashboard)/faculty/types";
 
 interface DemoteUserDialogProps {
-  faculty: Faculty;
+  faculty: FacultyTableData;
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (facultyId: number) => void;
+  onConfirm: (facultyId: string) => void;
 }
 
 export function DemoteUserDialog({

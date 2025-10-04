@@ -38,7 +38,7 @@ export type {
   CalendarStats,
   CalendarClientState,
   CalendarUtils,
-  MeetingWithPosition,
+  BookingWithPosition,
 } from "./types";
 export {
   calendarEventSchema,

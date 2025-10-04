@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -13,27 +12,20 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  ArrowUpDown,
-  ChevronDown,
-  Clock,
-  MoreHorizontal,
-  Mail,
-  Phone,
-  Plus,
-} from "lucide-react";
+import { ArrowUpDown, Clock, Mail, MoreHorizontal, Phone } from "lucide-react";
+import * as React from "react";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -42,25 +34,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { EditFacultyDialog } from "./edit-faculty-dialog";
-import { DemoteUserDialog } from "./demote-user-dialog";
 import { toast } from "sonner";
+import { DemoteUserDialog } from "./demote-user-dialog";
+import { EditFacultyDialog } from "./edit-faculty-dialog";
 
-export interface Faculty {
-  id: number;
-  name: string;
-  position: string;
-  email: string;
-  phone?: string;
-  availability: "available" | "busy" | "away";
-  officeHours?: {
-    start: string;
-    end: string;
-  };
-  availableDays?: string[];
-}
+import type { FacultyTableData } from "@/app/(dashboard)/faculty/types";
 
 /**
  * Creates table columns configuration for faculty data table
@@ -72,11 +50,11 @@ export interface Faculty {
  * @returns Array of column definitions for the table
  */
 export const createColumns = (
-  setEditingFaculty: (faculty: Faculty) => void,
+  setEditingFaculty: (faculty: FacultyTableData) => void,
   setIsEditDialogOpen: (open: boolean) => void,
-  setDemotingFaculty: (faculty: Faculty) => void,
+  setDemotingFaculty: (faculty: FacultyTableData) => void,
   setIsDemoteDialogOpen: (open: boolean) => void
-): ColumnDef<Faculty>[] => [
+): ColumnDef<FacultyTableData>[] => [
   {
     accessorKey: "name",
     header: ({ column }) => {
@@ -92,7 +70,8 @@ export const createColumns = (
       );
     },
     cell: ({ row }) => {
-      const name = row.getValue("name") as string;
+      const faculty = row.original;
+      const name = faculty.name;
       const initials = name
         .split(" ")
         .map((n) => n[0])
@@ -119,8 +98,9 @@ export const createColumns = (
     accessorKey: "email",
     header: "Contact",
     cell: ({ row }) => {
-      const email = row.getValue("email") as string;
-      const phone = row.original.phone;
+      const faculty = row.original;
+      const email = faculty.email;
+      const phone = faculty.phone;
 
       return (
         <div className="space-y-1">
@@ -253,9 +233,12 @@ export const createColumns = (
 ];
 
 interface FacultyDataTableProps {
-  data: Faculty[];
-  onFacultyUpdate?: (facultyId: number, updatedData: Partial<Faculty>) => void;
-  onFacultyDemote?: (facultyId: number) => void;
+  data: FacultyTableData[];
+  onFacultyUpdate?: (
+    facultyId: string,
+    updatedData: Partial<FacultyTableData>
+  ) => void;
+  onFacultyDemote?: (facultyId: string) => void;
 }
 
 /**
@@ -280,13 +263,11 @@ export function FacultyDataTable({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [editingFaculty, setEditingFaculty] = React.useState<Faculty | null>(
-    null
-  );
+  const [editingFaculty, setEditingFaculty] =
+    React.useState<FacultyTableData | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
-  const [demotingFaculty, setDemotingFaculty] = React.useState<Faculty | null>(
-    null
-  );
+  const [demotingFaculty, setDemotingFaculty] =
+    React.useState<FacultyTableData | null>(null);
   const [isDemoteDialogOpen, setIsDemoteDialogOpen] = React.useState(false);
 
   const handleCloseEditDialog = () => {
@@ -298,8 +279,8 @@ export function FacultyDataTable({
    * Handle faculty save with error handling
    */
   const handleSaveFaculty = (
-    facultyId: number,
-    updatedData: Partial<Faculty>
+    facultyId: string,
+    updatedData: Partial<FacultyTableData>
   ) => {
     try {
       if (onFacultyUpdate) {
@@ -320,7 +301,7 @@ export function FacultyDataTable({
   /**
    * Handle faculty demotion with error handling
    */
-  const handleConfirmDemote = (facultyId: number) => {
+  const handleConfirmDemote = (facultyId: string) => {
     try {
       if (onFacultyDemote) {
         onFacultyDemote(facultyId);

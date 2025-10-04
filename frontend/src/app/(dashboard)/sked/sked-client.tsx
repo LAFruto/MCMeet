@@ -1,13 +1,12 @@
 "use client";
 
-import { usePageContext } from "@/lib/hooks/use-chat";
 import { CalendarWeekView } from "@/components/calendar-week-view";
-import type { Meeting } from "@/lib/types";
-import { useCalendarView, useCalendarEvents, useCalendarData } from "./hooks";
-import { CALENDAR_CONSTANTS, CALENDAR_LABELS } from "./constants";
+import { usePageContext } from "@/lib/hooks/use-chat";
+import type { Booking } from "@/lib/types";
+import { useCalendarData, useCalendarEvents, useCalendarView } from "./hooks";
 
 interface SkedClientProps {
-  meetings: Meeting[];
+  bookings: Booking[];
 }
 
 /**
@@ -15,11 +14,11 @@ interface SkedClientProps {
  *
  * Main client component for the calendar system.
  * Provides comprehensive calendar functionality including viewing, creating,
- * editing, and managing meetings, events, and tasks.
+ * editing, and managing bookings, events, and tasks.
  *
- * @param meetings - Array of meetings from server
+ * @param bookings - Array of bookings from server
  */
-export function SkedClient({ meetings }: SkedClientProps) {
+export function SkedClient({ bookings }: SkedClientProps) {
   usePageContext("sked");
 
   // Initialize calendar view state
@@ -48,43 +47,43 @@ export function SkedClient({ meetings }: SkedClientProps) {
   } = useCalendarData(events, viewState);
 
   /**
-   * Handle meeting creation
+   * Handle booking creation
    */
-  const handleCreateMeeting = async (meetingData: any) => {
+  const handleCreateBooking = async (bookingData: any) => {
     try {
-      await createEvent(meetingData);
+      await createEvent(bookingData);
     } catch (error) {
-      console.error("Failed to create meeting:", error);
+      console.error("Failed to create booking:", error);
     }
   };
 
   /**
-   * Handle meeting updates
+   * Handle booking updates
    */
-  const handleUpdateMeeting = async (meetingId: string, meetingData: any) => {
+  const handleUpdateBooking = async (bookingId: string, bookingData: any) => {
     try {
-      await updateEvent(meetingId, meetingData);
+      await updateEvent(bookingId, bookingData);
     } catch (error) {
-      console.error("Failed to update meeting:", error);
+      console.error("Failed to update booking:", error);
     }
   };
 
   /**
-   * Handle meeting deletion
+   * Handle booking deletion
    */
-  const handleDeleteMeeting = async (meetingId: string) => {
+  const handleDeleteBooking = async (bookingId: string) => {
     try {
-      await deleteEvent(meetingId);
+      await deleteEvent(bookingId);
     } catch (error) {
-      console.error("Failed to delete meeting:", error);
+      console.error("Failed to delete booking:", error);
     }
   };
 
   return (
     <div className="flex-1 flex flex-col h-full w-full overflow-hidden">
       <CalendarWeekView
-        meetings={meetings}
-        onCreateMeeting={handleCreateMeeting}
+        bookings={bookings}
+        onCreateBooking={handleCreateBooking}
       />
     </div>
   );

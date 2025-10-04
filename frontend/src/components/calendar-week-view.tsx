@@ -26,7 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Meeting } from "@/lib/types";
+import type { Booking } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
   CalendarIcon,
@@ -45,11 +45,11 @@ import {
 import { useState } from "react";
 
 interface CalendarWeekViewProps {
-  meetings: Meeting[];
-  onCreateMeeting?: (meeting: Partial<Meeting>) => void;
+  bookings: Booking[];
+  onCreateBooking?: (booking: Partial<Booking>) => void;
 }
 
-interface NewMeetingForm {
+interface NewBookingForm {
   title: string;
   type: "meeting" | "event" | "task";
   date: string;
@@ -82,60 +82,59 @@ const MONTH_NAMES = [
 ];
 
 // Placeholder demo events for testing
-const PLACEHOLDER_EVENTS: Meeting[] = [
+const PLACEHOLDER_EVENTS: Booking[] = [
   {
-    id: 101,
+    id: "placeholder-101",
     title: "Client Meeting",
-    facultyId: 1,
-    facultyName: "Dr. Sarah Johnson",
+    description: "Quarterly review",
+    facultyId: "faculty-001",
     studentId: "demo",
-    studentName: "Demo User",
-    date: new Date().toLocaleDateString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-    }),
-    startTime: "09:00",
-    endTime: "10:00",
-    status: "scheduled",
+    startTime: new Date(new Date().setHours(9, 0, 0, 0)),
+    endTime: new Date(new Date().setHours(10, 0, 0, 0)),
+    status: "SCHEDULED",
+    scheduleType: "MEETING",
     purpose: "Quarterly review",
     location: "Online",
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
-    id: 102,
+    id: "placeholder-102",
     title: "Meetup with Team",
-    facultyId: 2,
-    facultyName: "Prof. Michael Chen",
+    description: "Team sync",
+    facultyId: "faculty-002",
     studentId: "demo",
-    studentName: "Demo User",
-    date: new Date().toLocaleDateString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-    }),
-    startTime: "09:00",
-    endTime: "10:00",
-    status: "scheduled",
+    startTime: new Date(new Date().setHours(9, 0, 0, 0)),
+    endTime: new Date(new Date().setHours(10, 0, 0, 0)),
+    status: "SCHEDULED",
+    scheduleType: "MEETING",
     purpose: "Team sync",
     location: "Room 305",
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
   {
-    id: 103,
+    id: "placeholder-103",
     title: "Client Meeting",
-    facultyId: 3,
-    facultyName: "Dr. Emily Rodriguez",
+    description: "Project discussion",
+    facultyId: "faculty-003",
     studentId: "demo",
-    studentName: "Demo User",
-    date: new Date(Date.now() + 86400000).toLocaleDateString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-    }),
-    startTime: "09:30",
-    endTime: "10:00",
-    status: "scheduled",
+    startTime: (() => {
+      const date = new Date(Date.now() + 86400000);
+      date.setHours(9, 30, 0, 0);
+      return date;
+    })(),
+    endTime: (() => {
+      const date = new Date(Date.now() + 86400000);
+      date.setHours(10, 0, 0, 0);
+      return date;
+    })(),
+    status: "SCHEDULED",
+    scheduleType: "MEETING",
     purpose: "Project discussion",
     location: "Online",
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
 ];
 
@@ -337,10 +336,10 @@ function formatDateWithLabels(date: Date): string {
 }
 
 // Helper function to render user avatars with tooltips
-function renderUserAvatars(meeting: Meeting) {
+function renderUserAvatars(booking: Booking) {
   const attendees = [
-    { name: meeting.facultyName, role: "Professor" },
-    { name: meeting.studentName, role: "Student" },
+    { name: booking.faculty?.name || "Unknown Faculty", role: "Professor" },
+    { name: booking.student?.name || "Unknown Student", role: "Student" },
   ];
 
   return (
@@ -352,7 +351,7 @@ function renderUserAvatars(meeting: Meeting) {
               <AvatarFallback className="text-[10px] bg-purple-100 text-red-700 dark:bg-red-900 dark:text-red-300">
                 {attendee.name
                   .split(" ")
-                  .map((n) => n[0])
+                  .map((n: string) => n[0])
                   .join("")
                   .slice(0, 2)}
               </AvatarFallback>
@@ -370,26 +369,30 @@ function renderUserAvatars(meeting: Meeting) {
 }
 
 // Helper to calculate overlapping events
-interface MeetingWithPosition extends Meeting {
+interface BookingWithPosition extends Booking {
   column: number;
   totalColumns: number;
 }
 
-function calculateOverlaps(meetings: Meeting[]): MeetingWithPosition[] {
-  if (meetings.length === 0) return [];
+function calculateOverlaps(bookings: Booking[]): BookingWithPosition[] {
+  if (bookings.length === 0) return [];
 
-  const sorted = [...meetings].sort((a, b) => {
-    const [aHour, aMin] = a.startTime.split(":").map(Number);
-    const [bHour, bMin] = b.startTime.split(":").map(Number);
+  const sorted = [...bookings].sort((a, b) => {
+    const aHour = a.startTime.getHours();
+    const aMin = a.startTime.getMinutes();
+    const bHour = b.startTime.getHours();
+    const bMin = b.startTime.getMinutes();
     return aHour * 60 + aMin - (bHour * 60 + bMin);
   });
 
-  const positioned: MeetingWithPosition[] = [];
-  const columns: { end: number; meetings: MeetingWithPosition[] }[] = [];
+  const positioned: BookingWithPosition[] = [];
+  const columns: { end: number; bookings: BookingWithPosition[] }[] = [];
 
-  for (const meeting of sorted) {
-    const [startHour, startMin] = meeting.startTime.split(":").map(Number);
-    const [endHour, endMin] = meeting.endTime.split(":").map(Number);
+  for (const booking of sorted) {
+    const startHour = booking.startTime.getHours();
+    const startMin = booking.startTime.getMinutes();
+    const endHour = booking.endTime.getHours();
+    const endMin = booking.endTime.getMinutes();
     const startMinutes = startHour * 60 + startMin;
     const endMinutes = endHour * 60 + endMin;
 
@@ -399,61 +402,65 @@ function calculateOverlaps(meetings: Meeting[]): MeetingWithPosition[] {
     if (columnIndex === -1) {
       // Create new column
       columnIndex = columns.length;
-      columns.push({ end: endMinutes, meetings: [] });
+      columns.push({ end: endMinutes, bookings: [] });
     } else {
       // Update existing column
       columns[columnIndex].end = endMinutes;
     }
 
-    // Create positioned meeting with temporary totalColumns
-    const positionedMeeting: MeetingWithPosition = {
-      ...meeting,
+    // Create positioned booking with temporary totalColumns
+    const positionedBooking: BookingWithPosition = {
+      ...booking,
       column: columnIndex,
       totalColumns: 1, // Will be updated later
     };
 
-    columns[columnIndex].meetings.push(positionedMeeting);
-    positioned.push(positionedMeeting);
+    columns[columnIndex].bookings.push(positionedBooking);
+    positioned.push(positionedBooking);
   }
 
-  // Update totalColumns for all overlapping meetings
-  for (const meeting of positioned) {
-    const [startHour, startMin] = meeting.startTime.split(":").map(Number);
-    const [endHour, endMin] = meeting.endTime.split(":").map(Number);
+  // Update totalColumns for all overlapping bookings
+  for (const booking of positioned) {
+    const startHour = booking.startTime.getHours();
+    const startMin = booking.startTime.getMinutes();
+    const endHour = booking.endTime.getHours();
+    const endMin = booking.endTime.getMinutes();
     const startMinutes = startHour * 60 + startMin;
     const endMinutes = endHour * 60 + endMin;
 
-    // Count how many columns have meetings that overlap with this one
+    // Count how many columns have bookings that overlap with this one
     let maxColumns = 0;
     for (const col of columns) {
-      const hasOverlap = col.meetings.some((m) => {
-        const [mStartHour, mStartMin] = m.startTime.split(":").map(Number);
-        const [mEndHour, mEndMin] = m.endTime.split(":").map(Number);
-        const mStartMinutes = mStartHour * 60 + mStartMin;
-        const mEndMinutes = mEndHour * 60 + mEndMin;
+      const hasOverlap = col.bookings.some((b) => {
+        const bStartHour = b.startTime.getHours();
+        const bStartMin = b.startTime.getMinutes();
+        const bEndHour = b.endTime.getHours();
+        const bEndMin = b.endTime.getMinutes();
+        const bStartMinutes = bStartHour * 60 + bStartMin;
+        const bEndMinutes = bEndHour * 60 + bEndMin;
 
-        // Check if meetings overlap
-        return mStartMinutes < endMinutes && mEndMinutes > startMinutes;
+        // Check if bookings overlap
+        return bStartMinutes < endMinutes && bEndMinutes > startMinutes;
       });
 
       if (hasOverlap) maxColumns++;
     }
 
-    meeting.totalColumns = Math.max(maxColumns, 1);
+    booking.totalColumns = Math.max(maxColumns, 1);
   }
 
   return positioned;
 }
 
 export function CalendarWeekView({
-  meetings,
-  onCreateMeeting,
+  bookings,
+  onCreateBooking,
 }: CalendarWeekViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("week");
-  const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [editMode, setEditMode] = useState(false);
-  const [openMeetingId, setOpenMeetingId] = useState<number | null>(null);
+  const [openBookingId, setOpenBookingId] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<
     "event" | "meeting" | "task"
@@ -462,7 +469,7 @@ export function CalendarWeekView({
     useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
-  const [newMeeting, setNewMeeting] = useState<NewMeetingForm>({
+  const [newBooking, setNewBooking] = useState<NewBookingForm>({
     title: "",
     type: "meeting",
     date: "",
@@ -479,41 +486,43 @@ export function CalendarWeekView({
   const [locationType, setLocationType] = useState<LocationType>("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Combine real meetings with placeholder events
-  const allMeetings = [...meetings, ...PLACEHOLDER_EVENTS];
+  // Combine real bookings with placeholder events
+  const allBookings = [...bookings, ...PLACEHOLDER_EVENTS];
 
   // Get unique faculty list
   const facultyList = Array.from(
-    new Set(allMeetings.map((m) => m.facultyName))
+    new Set(allBookings.map((b) => b.faculty?.name || "Unknown Faculty"))
   ).sort();
 
   // Helper function to count meetings by type
   const getMeetingCountByType = (type: ScheduleType) => {
     // Get meetings for current view (day/week/month)
-    let meetingsToCount = allMeetings;
+    let bookingsToCount = allBookings;
 
     if (viewMode === "day") {
-      meetingsToCount = getMeetingsForDate(currentDate);
+      bookingsToCount = getBookingsForDate(currentDate);
     } else if (viewMode === "week") {
       const weekDates = getWeekDates(currentDate);
-      meetingsToCount = weekDates.flatMap((date) => getMeetingsForDate(date));
+      bookingsToCount = weekDates.flatMap((date) => getBookingsForDate(date));
     } else if (viewMode === "month") {
       const monthDates = getMonthDates(currentDate);
-      meetingsToCount = monthDates.flatMap((date) => getMeetingsForDate(date));
+      bookingsToCount = monthDates.flatMap((date) => getBookingsForDate(date));
     }
 
     // Apply faculty and location filters (but not schedule type filter)
-    meetingsToCount = meetingsToCount.filter((meeting) => {
+    bookingsToCount = bookingsToCount.filter((booking) => {
       // Faculty filter
       if (selectedFaculty.length > 0) {
-        if (!selectedFaculty.includes(meeting.facultyName)) {
+        if (
+          !selectedFaculty.includes(booking.faculty?.name || "Unknown Faculty")
+        ) {
           return false;
         }
       }
 
       // Location type filter
       if (locationType !== "all") {
-        const isOnline = meeting.location?.toLowerCase().includes("online");
+        const isOnline = booking.location?.toLowerCase().includes("online");
         if (locationType === "online" && !isOnline) {
           return false;
         }
@@ -526,35 +535,37 @@ export function CalendarWeekView({
     });
 
     // Count by type
-    if (type === "all") return meetingsToCount.length;
+    if (type === "all") return bookingsToCount.length;
     if (type === "task") return 0; // No tasks in current data structure
 
-    return meetingsToCount.filter((meeting) => {
-      const meetingType = meeting.status === "completed" ? "event" : "meeting";
-      return meetingType === type;
+    return bookingsToCount.filter((booking) => {
+      const bookingType = booking.status === "COMPLETED" ? "event" : "meeting";
+      return bookingType === type;
     }).length;
   };
 
   // Apply filters
-  const filteredMeetings = allMeetings.filter((meeting) => {
+  const filteredBookings = allBookings.filter((booking) => {
     // Schedule type filter
     if (scheduleType !== "all") {
-      const meetingType = meeting.status === "completed" ? "event" : "meeting";
-      if (meetingType !== scheduleType && scheduleType !== "task") {
+      const bookingType = booking.status === "COMPLETED" ? "event" : "meeting";
+      if (bookingType !== scheduleType && scheduleType !== "task") {
         return false;
       }
     }
 
     // Faculty filter
     if (selectedFaculty.length > 0) {
-      if (!selectedFaculty.includes(meeting.facultyName)) {
+      if (
+        !selectedFaculty.includes(booking.faculty?.name || "Unknown Faculty")
+      ) {
         return false;
       }
     }
 
     // Location type filter
     if (locationType !== "all") {
-      const isOnline = meeting.location?.toLowerCase().includes("online");
+      const isOnline = booking.location?.toLowerCase().includes("online");
       if (locationType === "online" && !isOnline) {
         return false;
       }
@@ -617,8 +628,8 @@ export function CalendarWeekView({
     setSelectedDate(date);
     setSelectedHour(hour || null);
     const timeStr = hour ? `${hour.toString().padStart(2, "0")}:00` : "10:00";
-    setNewMeeting({
-      ...newMeeting,
+    setNewBooking({
+      ...newBooking,
       date: date.toISOString().split("T")[0],
       startTime: timeStr,
       endTime: hour ? `${(hour + 1).toString().padStart(2, "0")}:00` : "11:00",
@@ -627,18 +638,17 @@ export function CalendarWeekView({
   }
 
   function handleSaveSchedule() {
-    if (onCreateMeeting) {
-      onCreateMeeting({
-        title: newMeeting.title,
-        date: newMeeting.date,
-        startTime: newMeeting.startTime,
-        endTime: newMeeting.endTime,
-        location: newMeeting.location,
-        status: "scheduled",
+    if (onCreateBooking) {
+      onCreateBooking({
+        title: newBooking.title,
+        startTime: new Date(`${newBooking.date}T${newBooking.startTime}`),
+        endTime: new Date(`${newBooking.date}T${newBooking.endTime}`),
+        location: newBooking.location,
+        status: "SCHEDULED",
       });
     }
     setIsNewSchedulePopoverOpen(false);
-    setNewMeeting({
+    setNewBooking({
       title: "",
       type: "meeting",
       date: "",
@@ -650,23 +660,26 @@ export function CalendarWeekView({
     });
   }
 
-  function handleUpdateMeeting() {
-    // TODO: Implement update meeting logic
+  function handleUpdateBooking() {
+    // TODO: Implement update booking logic
     setEditMode(false);
-    setSelectedMeeting(null);
+    setSelectedBooking(null);
   }
 
-  function handleDeleteMeeting() {
-    // TODO: Implement delete meeting logic
-    setSelectedMeeting(null);
+  function handleDeleteBooking() {
+    // TODO: Implement delete booking logic
+    setSelectedBooking(null);
   }
 
-  function getMeetingsForDate(date: Date) {
+  function getBookingsForDate(date: Date) {
     const dateStr = formatDateKey(date);
-    return filteredMeetings.filter((m) => m.date === dateStr);
+    return filteredBookings.filter((b) => {
+      const bookingDate = b.startTime.toISOString().split("T")[0];
+      return bookingDate === dateStr;
+    });
   }
 
-  function renderMeetingPopover(meeting: Meeting) {
+  function renderBookingPopover(booking: Booking) {
     return (
       <>
         <div className="space-y-3 max-h-[80vh] overflow-y-auto">
@@ -691,7 +704,7 @@ export function CalendarWeekView({
                 <Label className="text-xs">Title</Label>
               </div>
               <Input
-                defaultValue={meeting.title}
+                defaultValue={booking.title}
                 className="h-8 text-sm flex-1 w-full"
                 placeholder="Meeting title"
               />
@@ -742,7 +755,9 @@ export function CalendarWeekView({
                     className="h-8 text-sm flex-1 w-full justify-start text-left font-normal"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {meeting.date || "Pick a date"}
+                    {booking.startTime
+                      ? booking.startTime.toLocaleDateString()
+                      : "Pick a date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -761,13 +776,13 @@ export function CalendarWeekView({
               <div className="flex items-center gap-2 flex-1 w-full">
                 <Input
                   type="time"
-                  defaultValue={meeting.startTime}
+                  defaultValue={booking.startTime.toTimeString().slice(0, 5)}
                   className="h-8 text-sm flex-1"
                 />
                 <span className="text-xs text-muted-foreground">→</span>
                 <Input
                   type="time"
-                  defaultValue={meeting.endTime}
+                  defaultValue={booking.endTime.toTimeString().slice(0, 5)}
                   className="h-8 text-sm flex-1"
                 />
               </div>
@@ -782,7 +797,7 @@ export function CalendarWeekView({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md flex-1 min-w-0">
                     <span className="text-sm truncate">
-                      {meeting.facultyName}
+                      {booking.faculty?.name || "Unknown Faculty"}
                     </span>
                   </div>
                   <Button
@@ -796,7 +811,7 @@ export function CalendarWeekView({
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md flex-1 min-w-0">
                     <span className="text-sm truncate">
-                      {meeting.studentName}
+                      {booking.student?.name || "Unknown Student"}
                     </span>
                   </div>
                   <Button
@@ -823,7 +838,7 @@ export function CalendarWeekView({
                 <Label className="text-xs">Location</Label>
               </div>
               <Input
-                defaultValue={meeting.location}
+                defaultValue={booking.location}
                 className="h-8 text-sm flex-1 w-full"
                 placeholder="Add location"
               />
@@ -837,8 +852,8 @@ export function CalendarWeekView({
               className="flex-1 cursor-pointer"
               onClick={() => {
                 setEditMode(false);
-                setSelectedMeeting(null);
-                setOpenMeetingId(null);
+                setSelectedBooking(null);
+                setOpenBookingId(null);
               }}
             >
               Cancel
@@ -846,7 +861,7 @@ export function CalendarWeekView({
             <Button
               size="sm"
               className="flex-1 cursor-pointer"
-              onClick={handleUpdateMeeting}
+              onClick={handleUpdateBooking}
             >
               Save
             </Button>
@@ -872,9 +887,9 @@ export function CalendarWeekView({
               <Button
                 variant="destructive"
                 onClick={() => {
-                  handleDeleteMeeting();
+                  handleDeleteBooking();
                   setIsDeleteDialogOpen(false);
-                  setOpenMeetingId(null);
+                  setOpenBookingId(null);
                 }}
               >
                 Delete
@@ -887,7 +902,7 @@ export function CalendarWeekView({
   }
 
   function renderDayView() {
-    const dayMeetings = getMeetingsForDate(currentDate);
+    const dayMeetings = getBookingsForDate(currentDate);
     const positionedMeetings = calculateOverlaps(dayMeetings);
 
     // Get current time position for today
@@ -947,8 +962,8 @@ export function CalendarWeekView({
                 <div className="absolute inset-0 pointer-events-none">
                   {positionedMeetings.map((meeting) => {
                     const { top, height } = getMeetingPosition(
-                      meeting.startTime,
-                      meeting.endTime,
+                      meeting.startTime.toTimeString().slice(0, 5),
+                      meeting.endTime.toTimeString().slice(0, 5),
                       "day"
                     );
 
@@ -959,15 +974,15 @@ export function CalendarWeekView({
                     return (
                       <Popover
                         key={meeting.id}
-                        open={openMeetingId === meeting.id}
+                        open={openBookingId === meeting.id}
                         onOpenChange={(open) => {
                           if (open) {
-                            setOpenMeetingId(meeting.id);
-                            setSelectedMeeting(meeting);
+                            setOpenBookingId(meeting.id);
+                            setSelectedBooking(meeting);
                             setEditMode(true);
                           } else {
-                            setOpenMeetingId(null);
-                            setSelectedMeeting(null);
+                            setOpenBookingId(null);
+                            setSelectedBooking(null);
                             setEditMode(false);
                           }
                         }}
@@ -993,8 +1008,13 @@ export function CalendarWeekView({
                                     getTimeHeaderColor(meeting.status)
                                   )}
                                 >
-                                  {formatTime12Hour(meeting.startTime)} -{" "}
-                                  {formatTime12Hour(meeting.endTime)}
+                                  {formatTime12Hour(
+                                    meeting.startTime.toTimeString().slice(0, 5)
+                                  )}{" "}
+                                  -{" "}
+                                  {formatTime12Hour(
+                                    meeting.endTime.toTimeString().slice(0, 5)
+                                  )}
                                 </div>
                                 <div className="flex items-center justify-between px-2">
                                   <div>
@@ -1006,7 +1026,7 @@ export function CalendarWeekView({
                                     </div>
                                     <div className="flex items-center justify-between -mt-1">
                                       <span className="text-xs text-muted-foreground truncate flex-1">
-                                        {meeting.date}
+                                        {meeting.startTime.toLocaleDateString()}
                                       </span>
                                     </div>
                                   </div>
@@ -1027,8 +1047,13 @@ export function CalendarWeekView({
                               <div className="flex items-center gap-2">
                                 <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
                                 <span>
-                                  {formatTime12Hour(meeting.startTime)} -{" "}
-                                  {formatTime12Hour(meeting.endTime)}
+                                  {formatTime12Hour(
+                                    meeting.startTime.toTimeString().slice(0, 5)
+                                  )}{" "}
+                                  -{" "}
+                                  {formatTime12Hour(
+                                    meeting.endTime.toTimeString().slice(0, 5)
+                                  )}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
@@ -1037,11 +1062,15 @@ export function CalendarWeekView({
                               </div>
                               <div className="flex items-center gap-2">
                                 <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-                                <span>{meeting.facultyName}</span>
+                                <span>
+                                  {meeting.faculty?.name || "Unknown Faculty"}
+                                </span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                                <span>{meeting.studentName}</span>
+                                <span>
+                                  {meeting.student?.name || "Unknown Student"}
+                                </span>
                               </div>
                             </div>
                           </TooltipContent>
@@ -1051,7 +1080,7 @@ export function CalendarWeekView({
                           side="right"
                           align="start"
                         >
-                          {renderMeetingPopover(meeting)}
+                          {renderBookingPopover(meeting)}
                         </PopoverContent>
                       </Popover>
                     );
@@ -1117,7 +1146,7 @@ export function CalendarWeekView({
                 </div>
 
                 {weekDates.map((date, dayIndex) => {
-                  const dayMeetings = getMeetingsForDate(date);
+                  const dayMeetings = getBookingsForDate(date);
                   const positionedMeetings = calculateOverlaps(dayMeetings);
                   const isCurrentDay = isToday(date);
 
@@ -1140,8 +1169,8 @@ export function CalendarWeekView({
                       <div className="absolute inset-0 pointer-events-none">
                         {positionedMeetings.map((meeting) => {
                           const { top, height } = getMeetingPosition(
-                            meeting.startTime,
-                            meeting.endTime,
+                            meeting.startTime.toTimeString().slice(0, 5),
+                            meeting.endTime.toTimeString().slice(0, 5),
                             "week"
                           );
 
@@ -1152,15 +1181,15 @@ export function CalendarWeekView({
                           return (
                             <Popover
                               key={meeting.id}
-                              open={openMeetingId === meeting.id}
+                              open={openBookingId === meeting.id}
                               onOpenChange={(open) => {
                                 if (open) {
-                                  setOpenMeetingId(meeting.id);
-                                  setSelectedMeeting(meeting);
+                                  setOpenBookingId(meeting.id);
+                                  setSelectedBooking(meeting);
                                   setEditMode(false);
                                 } else {
-                                  setOpenMeetingId(null);
-                                  setSelectedMeeting(null);
+                                  setOpenBookingId(null);
+                                  setSelectedBooking(null);
                                   setEditMode(false);
                                 }
                               }}
@@ -1186,8 +1215,17 @@ export function CalendarWeekView({
                                           getTimeHeaderColor(meeting.status)
                                         )}
                                       >
-                                        {formatTime12Hour(meeting.startTime)} -{" "}
-                                        {formatTime12Hour(meeting.endTime)}
+                                        {formatTime12Hour(
+                                          meeting.startTime
+                                            .toTimeString()
+                                            .slice(0, 5)
+                                        )}{" "}
+                                        -{" "}
+                                        {formatTime12Hour(
+                                          meeting.endTime
+                                            .toTimeString()
+                                            .slice(0, 5)
+                                        )}
                                       </div>
                                       <div className="flex items-center justify-between px-2">
                                         <div>
@@ -1199,7 +1237,7 @@ export function CalendarWeekView({
                                           </div>
                                           <div className="flex items-center justify-between -mt-1">
                                             <span className="text-xs text-muted-foreground truncate flex-1">
-                                              {meeting.date}
+                                              {meeting.startTime.toLocaleDateString()}
                                             </span>
                                           </div>
                                         </div>
@@ -1220,8 +1258,17 @@ export function CalendarWeekView({
                                     <div className="flex items-center gap-2">
                                       <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
                                       <span>
-                                        {formatTime12Hour(meeting.startTime)} -{" "}
-                                        {formatTime12Hour(meeting.endTime)}
+                                        {formatTime12Hour(
+                                          meeting.startTime
+                                            .toTimeString()
+                                            .slice(0, 5)
+                                        )}{" "}
+                                        -{" "}
+                                        {formatTime12Hour(
+                                          meeting.endTime
+                                            .toTimeString()
+                                            .slice(0, 5)
+                                        )}
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -1230,11 +1277,17 @@ export function CalendarWeekView({
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-                                      <span>{meeting.facultyName}</span>
+                                      <span>
+                                        {meeting.faculty?.name ||
+                                          "Unknown Faculty"}
+                                      </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                       <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                                      <span>{meeting.studentName}</span>
+                                      <span>
+                                        {meeting.student?.name ||
+                                          "Unknown Student"}
+                                      </span>
                                     </div>
                                   </div>
                                 </TooltipContent>
@@ -1244,7 +1297,7 @@ export function CalendarWeekView({
                                 side="right"
                                 align="start"
                               >
-                                {renderMeetingPopover(meeting)}
+                                {renderBookingPopover(meeting)}
                               </PopoverContent>
                             </Popover>
                           );
@@ -1283,7 +1336,7 @@ export function CalendarWeekView({
 
           <div className="grid grid-cols-7 border overflow-hidden">
             {monthDates.map((date, i) => {
-              const dateMeetings = getMeetingsForDate(date);
+              const dateMeetings = getBookingsForDate(date);
               const isCurrentMonth = isSameMonth(date);
 
               return (
@@ -1314,15 +1367,15 @@ export function CalendarWeekView({
                     {dateMeetings.slice(0, 2).map((meeting) => (
                       <Popover
                         key={meeting.id}
-                        open={openMeetingId === meeting.id}
+                        open={openBookingId === meeting.id}
                         onOpenChange={(open) => {
                           if (open) {
-                            setOpenMeetingId(meeting.id);
-                            setSelectedMeeting(meeting);
+                            setOpenBookingId(meeting.id);
+                            setSelectedBooking(meeting);
                             setEditMode(true);
                           } else {
-                            setOpenMeetingId(null);
-                            setSelectedMeeting(null);
+                            setOpenBookingId(null);
+                            setSelectedBooking(null);
                             setEditMode(false);
                           }
                         }}
@@ -1341,7 +1394,11 @@ export function CalendarWeekView({
                               >
                                 <div className="font-medium truncate">
                                   <span className="hidden sm:inline">
-                                    {formatTime12Hour(meeting.startTime)}{" "}
+                                    {formatTime12Hour(
+                                      meeting.startTime
+                                        .toTimeString()
+                                        .slice(0, 5)
+                                    )}{" "}
                                   </span>
                                   {capitalizeScheduleType(meeting.scheduleType)}{" "}
                                   • {meeting.location}
@@ -1357,8 +1414,13 @@ export function CalendarWeekView({
                               <div className="flex items-center gap-2">
                                 <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
                                 <span>
-                                  {formatTime12Hour(meeting.startTime)} -{" "}
-                                  {formatTime12Hour(meeting.endTime)}
+                                  {formatTime12Hour(
+                                    meeting.startTime.toTimeString().slice(0, 5)
+                                  )}{" "}
+                                  -{" "}
+                                  {formatTime12Hour(
+                                    meeting.endTime.toTimeString().slice(0, 5)
+                                  )}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
@@ -1367,11 +1429,15 @@ export function CalendarWeekView({
                               </div>
                               <div className="flex items-center gap-2">
                                 <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-                                <span>{meeting.facultyName}</span>
+                                <span>
+                                  {meeting.faculty?.name || "Unknown Faculty"}
+                                </span>
                               </div>
                               <div className="flex items-center gap-2">
                                 <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                                <span>{meeting.studentName}</span>
+                                <span>
+                                  {meeting.student?.name || "Unknown Student"}
+                                </span>
                               </div>
                             </div>
                           </TooltipContent>
@@ -1381,7 +1447,7 @@ export function CalendarWeekView({
                           side="right"
                           align="start"
                         >
-                          {renderMeetingPopover(meeting)}
+                          {renderBookingPopover(meeting)}
                         </PopoverContent>
                       </Popover>
                     ))}
@@ -1412,7 +1478,7 @@ export function CalendarWeekView({
                                         getMeetingColor(meeting.status)
                                       )}
                                       onClick={() => {
-                                        setSelectedMeeting(meeting);
+                                        setSelectedBooking(meeting);
                                         setEditMode(true);
                                       }}
                                     >
@@ -1422,8 +1488,17 @@ export function CalendarWeekView({
                                           getTimeHeaderColor(meeting.status)
                                         )}
                                       >
-                                        {formatTime12Hour(meeting.startTime)} -{" "}
-                                        {formatTime12Hour(meeting.endTime)}
+                                        {formatTime12Hour(
+                                          meeting.startTime
+                                            .toTimeString()
+                                            .slice(0, 5)
+                                        )}{" "}
+                                        -{" "}
+                                        {formatTime12Hour(
+                                          meeting.endTime
+                                            .toTimeString()
+                                            .slice(0, 5)
+                                        )}
                                       </div>
                                       <div className="px-2 py-1 space-y-1">
                                         <div className="font-medium text-sm">
@@ -1446,7 +1521,7 @@ export function CalendarWeekView({
                                     side="right"
                                     align="start"
                                   >
-                                    {renderMeetingPopover(meeting)}
+                                    {renderBookingPopover(meeting)}
                                   </PopoverContent>
                                 </Popover>
                               ))}

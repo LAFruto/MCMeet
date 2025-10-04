@@ -15,7 +15,7 @@ export const auth = betterAuth({
       role: {
         type: "string",
         required: true,
-        defaultValue: "student",
+        defaultValue: "STUDENT",
         input: false, // Users cannot set their own role
       },
       twoFactorEnabled: {

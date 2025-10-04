@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { bookingService } from "../services/booking-service";
-import type { Meeting, BookingRequest } from "../types";
+import type { Booking, BookingRequest } from "../types";
 
 /**
  * Query keys for booking-related queries
@@ -10,7 +10,7 @@ export const bookingKeys = {
   lists: () => [...bookingKeys.all, "list"] as const,
   list: (filters?: string) => [...bookingKeys.lists(), { filters }] as const,
   details: () => [...bookingKeys.all, "detail"] as const,
-  detail: (id: number) => [...bookingKeys.details(), id] as const,
+  detail: (id: string) => [...bookingKeys.details(), id] as const,
 };
 
 /**
@@ -27,7 +27,7 @@ export function useUserBookings() {
 /**
  * Hook to fetch a single booking by ID
  */
-export function useBookingById(id: number) {
+export function useBookingById(id: string) {
   return useQuery({
     queryKey: bookingKeys.detail(id),
     queryFn: () => bookingService.getById(id),
@@ -58,7 +58,7 @@ export function useCancelBooking() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => bookingService.cancel(id),
+    mutationFn: (id: string) => bookingService.cancel(id),
     onSuccess: () => {
       // Invalidate and refetch bookings
       queryClient.invalidateQueries({ queryKey: bookingKeys.lists() });
@@ -75,20 +75,16 @@ export function useRescheduleBooking() {
   return useMutation({
     mutationFn: ({
       id,
-      newDate,
       newStartTime,
       newEndTime,
     }: {
-      id: number;
-      newDate: string;
-      newStartTime: string;
-      newEndTime: string;
-    }) => bookingService.reschedule(id, newDate, newStartTime, newEndTime),
+      id: string;
+      newStartTime: Date;
+      newEndTime: Date;
+    }) => bookingService.reschedule(id, newStartTime, newEndTime),
     onSuccess: () => {
       // Invalidate and refetch bookings
       queryClient.invalidateQueries({ queryKey: bookingKeys.lists() });
     },
   });
 }
-
-

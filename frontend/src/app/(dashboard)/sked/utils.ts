@@ -195,7 +195,18 @@ export function filterEventsByType(
     return events;
   }
 
-  return events.filter((event) => event.type === scheduleType);
+  return events.filter((event) => {
+    // Convert new enum values to old format for comparison
+    const eventType =
+      event.type === "MEETING"
+        ? "meeting"
+        : event.type === "EVENT"
+        ? "event"
+        : event.type === "TASK"
+        ? "task"
+        : event.type;
+    return eventType === scheduleType;
+  });
 }
 
 /**
@@ -349,12 +360,12 @@ export function calculateCalendarStats(
   );
 
   return {
-    totalMeetings: events.filter((e) => e.type === "meeting").length,
-    totalEvents: events.filter((e) => e.type === "event").length,
-    totalTasks: events.filter((e) => e.type === "task").length,
-    todayMeetings: todayEvents.filter((e) => e.type === "meeting").length,
-    weekMeetings: weekEvents.filter((e) => e.type === "meeting").length,
-    monthMeetings: monthEvents.filter((e) => e.type === "meeting").length,
+    totalMeetings: events.filter((e) => e.type === "MEETING").length,
+    totalEvents: events.filter((e) => e.type === "EVENT").length,
+    totalTasks: events.filter((e) => e.type === "TASK").length,
+    todayMeetings: todayEvents.filter((e) => e.type === "MEETING").length,
+    weekMeetings: weekEvents.filter((e) => e.type === "MEETING").length,
+    monthMeetings: monthEvents.filter((e) => e.type === "MEETING").length,
   };
 }
 

@@ -9,13 +9,13 @@ export default async function SkedPage() {
   // Require admin role
   await getAdminSession();
 
-  const meetings = await getUserBookings();
+  const bookings = await getUserBookings();
 
   return (
     <main className="flex-1 flex flex-col h-full overflow-hidden">
       <CalendarErrorBoundary>
         <Suspense fallback={<CalendarLoadingSkeleton />}>
-          <SkedClient meetings={meetings} />
+          <SkedClient bookings={bookings} />
         </Suspense>
       </CalendarErrorBoundary>
     </main>

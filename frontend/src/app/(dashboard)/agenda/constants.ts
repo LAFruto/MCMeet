@@ -4,10 +4,13 @@
 
 export const AGENDA_CONSTANTS = {
   // View modes
-  VIEW_MODES: ["day", "week", "month"] as const,
+  VIEW_MODES: ["list", "day", "week", "month"] as const,
 
   // Schedule types
   SCHEDULE_TYPES: ["all", "meeting", "event", "task"] as const,
+
+  // Meeting request statuses
+  REQUEST_STATUSES: ["pending", "approved", "rejected", "cancelled"] as const,
 
   // Time configuration
   HOURS_PER_DAY: 24,
@@ -117,6 +120,7 @@ export const AGENDA_LABELS = {
   TODAY: "Today",
 
   // Views
+  LIST_VIEW: "List",
   DAY_VIEW: "Day",
   WEEK_VIEW: "Week",
   MONTH_VIEW: "Month",
@@ -142,4 +146,18 @@ export const AGENDA_LABELS = {
   UPCOMING: "Upcoming",
   THIS_WEEK: "This Week",
   THIS_MONTH: "This Month",
+
+  // Booking requests
+  BOOKING_REQUESTS: "Booking Requests",
+  PENDING_REQUESTS: "Pending Requests",
+  APPROVED_REQUESTS: "Approved Requests",
+  REJECTED_REQUESTS: "Rejected Requests",
+  APPROVE: "Approve",
+  REJECT: "Reject",
+  VIEW_DETAILS: "View Details",
+  REJECTION_REASON: "Rejection Reason",
+  REQUEST_FROM: "Request from",
+  REQUESTED_ON: "Requested on",
+  APPROVED_ON: "Approved on",
+  REJECTED_ON: "Rejected on",
 } as const;

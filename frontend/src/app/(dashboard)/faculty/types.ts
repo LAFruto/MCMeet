@@ -3,7 +3,7 @@
  */
 
 export interface FacultyTableData {
-  id: number;
+  id: string;
   name: string;
   position: string;
   email: string;
@@ -14,12 +14,22 @@ export interface FacultyTableData {
     end: string;
   };
   availableDays?: string[];
+  department?: string;
+  specializations?: string[];
+  office?: string;
+  bio?: string;
 }
 
 export interface FacultyUpdateData {
   name?: string;
   position?: string;
   phone?: string;
+  department?: string;
+  specializations?: string[];
+  office?: string;
+  availability?: string;
+  status?: string;
+  bio?: string;
   officeHours?: {
     start: string;
     end: string;

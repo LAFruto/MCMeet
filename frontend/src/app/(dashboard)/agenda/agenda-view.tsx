@@ -4,7 +4,6 @@
 
 "use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { Meeting } from "@/lib/types";
+import type { Booking } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
   CalendarIcon,
@@ -22,10 +21,36 @@ import {
   MapPin,
   User,
   Users,
+  List,
+  Filter,
+  Search,
+  Calendar,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { useState } from "react";
-import type { AgendaViewState, AgendaEvent, AgendaStats } from "./types";
+import type {
+  AgendaViewState,
+  AgendaEvent,
+  AgendaStats,
+  BookingRequest,
+} from "./types";
 import { AGENDA_CONSTANTS, AGENDA_LABELS, AGENDA_MESSAGES } from "./constants";
+import { BookingRequestCard } from "@/components/booking-request-card";
+import { BookingRequestDetailsDialog } from "@/components/booking-request-details-dialog";
+import {
+  usePendingBookingRequests,
+  useApproveBookingRequest,
+  useRejectBookingRequest,
+} from "@/lib/hooks/use-booking-requests";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   formatDateKey,
   getWeekDates,
@@ -37,12 +62,12 @@ import {
 } from "./utils";
 
 interface AgendaViewProps {
-  meetings: Meeting[];
+  meetings: Booking[];
   viewState: AgendaViewState;
   onNavigatePrevious: () => void;
   onNavigateNext: () => void;
   onNavigateToday: () => void;
-  onChangeViewMode: (mode: "day" | "week" | "month") => void;
+  onChangeViewMode: (mode: "list" | "day" | "week" | "month") => void;
   stats: AgendaStats;
   currentTimePosition: number;
 }
@@ -64,6 +89,19 @@ export function AgendaView({
   currentTimePosition,
 }: AgendaViewProps) {
   const [selectedEvent, setSelectedEvent] = useState<AgendaEvent | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<BookingRequest | null>(
+    null
+  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "pending" | "approved" | "rejected"
+  >("all");
+
+  // Booking request hooks
+  const { data: bookingRequests = [], isLoading: isLoadingRequests } =
+    usePendingBookingRequests();
+  const approveRequest = useApproveBookingRequest();
+  const rejectRequest = useRejectBookingRequest();
 
   // Transform meetings to agenda events
   const agendaEvents: AgendaEvent[] = meetings.map((meeting) => ({
@@ -74,7 +112,10 @@ export function AgendaView({
     type: (meeting.scheduleType as "meeting" | "event" | "task") || "meeting",
     location: meeting.location,
     description: meeting.purpose || "",
-    attendees: [meeting.facultyName, meeting.studentName].filter(Boolean),
+    attendees: [
+      meeting.faculty?.name || "Unknown Faculty",
+      meeting.student?.name || "Unknown Student",
+    ].filter(Boolean),
     color: getEventColor(
       (meeting.scheduleType as "meeting" | "event" | "task") || "meeting"
     ),
@@ -487,6 +528,250 @@ export function AgendaView({
   };
 
   /**
+   * Render list view with meeting requests
+   */
+  const renderListView = () => {
+    const filteredRequests = bookingRequests.filter((request) => {
+      const matchesSearch =
+        request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        request.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        request.purpose.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === "all" || request.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+
+    const pendingCount = bookingRequests.filter(
+      (r) => r.status === "pending"
+    ).length;
+    const approvedCount = bookingRequests.filter(
+      (r) => r.status === "approved"
+    ).length;
+    const rejectedCount = bookingRequests.filter(
+      (r) => r.status === "rejected"
+    ).length;
+
+    return (
+      <div className="flex flex-col h-full">
+        {/* Fixed Header matching Sked/Faculty UI */}
+        <div className="shrink-0 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          {/* Top Bar - Title and Stats */}
+          <div className="flex items-center justify-between px-4 sm:px-6 h-14 border-b">
+            {/* Left: Title and Stats */}
+            <div className="flex items-center gap-3">
+              <CalendarIcon className="h-5 w-5 text-primary" />
+              <h1 className="text-base sm:text-lg font-semibold">
+                Booking Requests
+              </h1>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="text-muted-foreground">
+                    {pendingCount} Pending
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-muted-foreground">
+                    {approvedCount} Approved
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span className="text-muted-foreground">
+                    {rejectedCount} Rejected
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Second Bar - Search and Filters */}
+          <div className="flex items-center justify-between px-4 sm:px-6 h-12">
+            {/* Left: Search */}
+            <div className="flex items-center gap-3 flex-1">
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by student name, title, or purpose..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-8 text-sm"
+                  aria-label="Search booking requests"
+                />
+              </div>
+            </div>
+
+            {/* Right: Status Filter */}
+            <div className="flex items-center gap-2">
+              <Select
+                value={statusFilter}
+                onValueChange={(value: any) => setStatusFilter(value)}
+              >
+                <SelectTrigger className="w-40 h-8 text-sm">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-hidden">
+          {isLoadingRequests ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">
+                  Loading booking requests...
+                </p>
+              </div>
+            </div>
+          ) : filteredRequests.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 text-center px-6">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                <CalendarIcon className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">
+                No booking requests found
+              </h3>
+              <p className="text-muted-foreground max-w-md">
+                {searchQuery || statusFilter !== "all"
+                  ? "Try adjusting your search or filter criteria to find what you're looking for."
+                  : "No booking requests have been submitted yet. Students can request bookings through the chatbot."}
+              </p>
+            </div>
+          ) : (
+            <div className="p-4">
+              <div className="space-y-2">
+                {filteredRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    className="bg-card border rounded-lg hover:shadow-sm transition-shadow cursor-pointer"
+                    onClick={() => setSelectedRequest(request)}
+                  >
+                    <div className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="font-medium truncate">
+                              {request.title}
+                            </h3>
+                            <Badge
+                              variant={
+                                request.status === "pending"
+                                  ? "secondary"
+                                  : request.status === "approved"
+                                  ? "default"
+                                  : "destructive"
+                              }
+                              className="text-xs"
+                            >
+                              {request.status.charAt(0).toUpperCase() +
+                                request.status.slice(1)}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                            {request.description || request.purpose}
+                          </p>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <User className="w-4 h-4" />
+                              <span>{request.studentName}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              <span>
+                                {new Intl.DateTimeFormat("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                }).format(request.startTime)}
+                              </span>
+                            </div>
+                            {request.location && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-4 h-4" />
+                                <span>{request.location}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="ml-4 flex-shrink-0">
+                          {request.status === "pending" && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  approveRequest.mutate({
+                                    requestId: request.id,
+                                    approvedBy: "current-user",
+                                  });
+                                }}
+                                className="h-8 cursor-pointer"
+                              >
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  rejectRequest.mutate({
+                                    requestId: request.id,
+                                    rejectionReason:
+                                      "Not available at this time",
+                                  });
+                                }}
+                                className="h-8 cursor-pointer"
+                              >
+                                <XCircle className="w-4 h-4 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Booking Request Details Dialog */}
+        <BookingRequestDetailsDialog
+          request={selectedRequest}
+          isOpen={!!selectedRequest}
+          onClose={() => setSelectedRequest(null)}
+          onApprove={(requestId) => {
+            approveRequest.mutate({ requestId, approvedBy: "current-user" });
+            setSelectedRequest(null);
+          }}
+          onReject={(requestId, reason) => {
+            rejectRequest.mutate({ requestId, rejectionReason: reason });
+            setSelectedRequest(null);
+          }}
+          showActions={true}
+        />
+      </div>
+    );
+  };
+
+  /**
    * Render month view
    */
   const renderMonthView = () => {
@@ -623,84 +908,94 @@ export function AgendaView({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="shrink-0 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        {/* Top bar */}
-        <div className="flex items-center justify-between px-4 sm:px-6 h-12 border-b">
-          <div className="flex items-center gap-3">
-            <CalendarIcon className="h-5 w-5 text-primary" />
-            <h1 className="text-lg font-semibold">
-              {AGENDA_LABELS.MY_SCHEDULE}
-            </h1>
+      {/* Header - only show for calendar views */}
+      {viewState.viewMode !== "list" && (
+        <div className="shrink-0 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-4 sm:px-6 h-12 border-b">
+            <div className="flex items-center gap-3">
+              <CalendarIcon className="h-5 w-5 text-primary" />
+              <h1 className="text-lg font-semibold">
+                {AGENDA_LABELS.MY_SCHEDULE}
+              </h1>
+            </div>
+
+            {/* View mode buttons */}
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onChangeViewMode("list")}
+                className="cursor-pointer"
+              >
+                <List className="w-4 h-4 mr-2" />
+                {AGENDA_LABELS.LIST_VIEW}
+              </Button>
+              <Button
+                variant={viewState.viewMode === "day" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => onChangeViewMode("day")}
+                className="cursor-pointer"
+              >
+                {AGENDA_LABELS.DAY_VIEW}
+              </Button>
+              <Button
+                variant={viewState.viewMode === "week" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => onChangeViewMode("week")}
+                className="cursor-pointer"
+              >
+                {AGENDA_LABELS.WEEK_VIEW}
+              </Button>
+              <Button
+                variant={viewState.viewMode === "month" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => onChangeViewMode("month")}
+                className="cursor-pointer"
+              >
+                {AGENDA_LABELS.MONTH_VIEW}
+              </Button>
+            </div>
           </div>
 
-          {/* View mode buttons */}
-          <div className="flex items-center gap-1">
-            <Button
-              variant={viewState.viewMode === "day" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onChangeViewMode("day")}
-              className="cursor-pointer"
-            >
-              {AGENDA_LABELS.DAY_VIEW}
-            </Button>
-            <Button
-              variant={viewState.viewMode === "week" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onChangeViewMode("week")}
-              className="cursor-pointer"
-            >
-              {AGENDA_LABELS.WEEK_VIEW}
-            </Button>
-            <Button
-              variant={viewState.viewMode === "month" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onChangeViewMode("month")}
-              className="cursor-pointer"
-            >
-              {AGENDA_LABELS.MONTH_VIEW}
-            </Button>
+          {/* Navigation bar */}
+          <div className="flex items-center justify-between px-4 sm:px-6 h-10">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onNavigatePrevious}
+                className="cursor-pointer"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onNavigateToday}
+                className="cursor-pointer"
+              >
+                {AGENDA_LABELS.TODAY}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onNavigateNext}
+                className="cursor-pointer"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium ml-2">
+                {formatDate(viewState.currentDate)}
+              </span>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Navigation bar */}
-        <div className="flex items-center justify-between px-4 sm:px-6 h-10">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onNavigatePrevious}
-              className="cursor-pointer"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onNavigateToday}
-              className="cursor-pointer"
-            >
-              {AGENDA_LABELS.TODAY}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onNavigateNext}
-              className="cursor-pointer"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium ml-2">
-              {formatDate(viewState.currentDate)}
-            </span>
-          </div>
-        </div>
-
-        {/* Schedule type tabs */}
-      </div>
-
-      {/* Calendar content */}
+      {/* Content */}
       <div className="flex-1 overflow-hidden">
+        {viewState.viewMode === "list" && renderListView()}
         {viewState.viewMode === "day" && renderDayView()}
         {viewState.viewMode === "week" && renderWeekView()}
         {viewState.viewMode === "month" && renderMonthView()}

@@ -20,14 +20,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { User, Mail, Phone, Clock, Calendar, Save, X } from "lucide-react";
-import type { Faculty } from "./faculty-data-table";
+import type { FacultyTableData } from "@/app/(dashboard)/faculty/types";
 import { FACULTY_CONSTANTS } from "@/app/(dashboard)/faculty/constants";
 
 interface EditFacultyDialogProps {
-  faculty: Faculty;
+  faculty: FacultyTableData;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (facultyId: number, updatedData: Partial<Faculty>) => void;
+  onSave: (facultyId: string, updatedData: Partial<FacultyTableData>) => void;
 }
 
 export function EditFacultyDialog({
@@ -72,7 +72,14 @@ export function EditFacultyDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(faculty.id, formData);
+    const updatedData: Partial<FacultyTableData> = {
+      name: formData.name,
+      position: formData.position,
+      phone: formData.phone,
+      officeHours: formData.officeHours,
+      availableDays: formData.availableDays,
+    };
+    onSave(faculty.id, updatedData);
     onClose();
   };
 

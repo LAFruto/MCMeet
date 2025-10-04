@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Meeting } from "@/lib/types";
+import type { Booking } from "@/lib/types";
 import type {
   AgendaEvent,
   AgendaStats,
@@ -29,7 +29,7 @@ import {
 export function useAgendaView(initialDate: Date = new Date()) {
   const [viewState, setViewState] = useState<AgendaViewState>({
     currentDate: normalizeDate(initialDate),
-    viewMode: "week",
+    viewMode: "list",
   });
 
   /**
@@ -41,6 +41,10 @@ export function useAgendaView(initialDate: Date = new Date()) {
       let newDate: Date;
 
       switch (viewMode) {
+        case "list":
+          // List view doesn't need navigation
+          newDate = currentDate;
+          break;
         case "day":
           newDate = new Date(currentDate);
           newDate.setDate(newDate.getDate() - 1);
@@ -73,6 +77,10 @@ export function useAgendaView(initialDate: Date = new Date()) {
       let newDate: Date;
 
       switch (viewMode) {
+        case "list":
+          // List view doesn't need navigation
+          newDate = currentDate;
+          break;
         case "day":
           newDate = new Date(currentDate);
           newDate.setDate(newDate.getDate() + 1);
@@ -129,7 +137,7 @@ export function useAgendaView(initialDate: Date = new Date()) {
  * Hook for processing agenda data from meetings (read-only)
  */
 export function useAgendaDataFromMeetings(
-  meetings: Meeting[],
+  meetings: Booking[],
   viewState: AgendaViewState
 ) {
   // Transform meetings to agenda events
@@ -137,21 +145,14 @@ export function useAgendaDataFromMeetings(
     return meetings
       .map((meeting) => {
         // Parse the date string - expecting ISO format (YYYY-MM-DD)
-        let meetingDate: Date;
+        // Use startTime as the meeting date (it's already a Date object)
+        const meetingDate = meeting.startTime;
 
-        // First try parsing as ISO date string (most common format)
-        if (meeting.date.includes("-")) {
-          meetingDate = new Date(meeting.date + "T00:00:00");
-        } else {
-          // Fallback to direct parsing
-          meetingDate = new Date(meeting.date);
-        }
-
-        // Validate the parsed date
+        // Validate the date
         if (isNaN(meetingDate.getTime())) {
           console.warn(
             "Invalid meeting date:",
-            meeting.date,
+            meeting.startTime,
             "for meeting:",
             meeting.title
           );
@@ -159,9 +160,17 @@ export function useAgendaDataFromMeetings(
           return null;
         }
 
-        // Parse time strings (format: "HH:MM")
-        const startTimeParts = meeting.startTime.split(":");
-        const endTimeParts = meeting.endTime.split(":");
+        // Extract time parts from Date objects
+        const startTimeStr = meeting.startTime
+          .toTimeString()
+          .split(" ")[0]
+          .substring(0, 5);
+        const endTimeStr = meeting.endTime
+          .toTimeString()
+          .split(" ")[0]
+          .substring(0, 5);
+        const startTimeParts = startTimeStr.split(":");
+        const endTimeParts = endTimeStr.split(":");
 
         if (startTimeParts.length !== 2 || endTimeParts.length !== 2) {
           console.warn(
@@ -204,19 +213,13 @@ export function useAgendaDataFromMeetings(
           return null;
         }
 
-        // Create proper Date objects by combining date and time
-        const startTime = new Date(meetingDate);
-        startTime.setHours(startHour, startMinute, 0, 0);
+        // Use the existing Date objects directly
+        const startTime = meeting.startTime;
+        const endTime = meeting.endTime;
 
-        const endTime = new Date(meetingDate);
-        endTime.setHours(endHour, endMinute, 0, 0);
-
-        // Validate the final dates
+        // Validate the dates
         if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
-          console.warn(
-            "Invalid final date created for meeting:",
-            meeting.title
-          );
+          console.warn("Invalid date for meeting:", meeting.title);
           return null;
         }
 
@@ -230,19 +233,26 @@ export function useAgendaDataFromMeetings(
         }
 
         return {
-          id: meeting.id.toString(),
+          id: meeting.id,
           title: meeting.title,
           startTime,
           endTime,
           type:
-            (meeting.scheduleType as "meeting" | "event" | "task") || "meeting",
-          location: meeting.location,
+            meeting.scheduleType === "MEETING"
+              ? "meeting"
+              : meeting.scheduleType === "EVENT"
+              ? "event"
+              : "task",
+          location: meeting.location || "",
           description: meeting.purpose || "",
-          attendees: [meeting.facultyName, meeting.studentName].filter(Boolean),
+          attendees: [
+            meeting.faculty?.name || "Unknown Faculty",
+            meeting.student?.name || "Unknown Student",
+          ].filter(Boolean),
           color:
-            meeting.scheduleType === "meeting"
+            meeting.scheduleType === "MEETING"
               ? "#ef4444"
-              : meeting.scheduleType === "event"
+              : meeting.scheduleType === "EVENT"
               ? "#3b82f6"
               : "#8b5cf6",
           status: "confirmed" as const,
@@ -273,6 +283,9 @@ export function useAgendaData(
     let endDate: Date;
 
     switch (viewMode) {
+      case "list":
+        // List view shows all events without date filtering
+        return filtered;
       case "day":
         startDate = new Date(currentDate);
         endDate = new Date(currentDate);
@@ -320,6 +333,9 @@ export function useAgendaData(
     const { currentDate, viewMode } = viewState;
 
     switch (viewMode) {
+      case "list":
+        // List view shows all filtered events
+        return filteredEvents;
       case "day":
         return filteredEvents.filter(
           (event: AgendaEvent) =>

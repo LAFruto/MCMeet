@@ -198,9 +198,9 @@ export function useCalendarEvents(initialEvents: CalendarEvent[] = []) {
         description: eventData.description,
         attendees: eventData.attendees,
         color:
-          eventData.type === "meeting"
+          eventData.type === "MEETING"
             ? "#ef4444"
-            : eventData.type === "event"
+            : eventData.type === "EVENT"
             ? "#3b82f6"
             : "#8b5cf6",
       };
@@ -208,9 +208,9 @@ export function useCalendarEvents(initialEvents: CalendarEvent[] = []) {
       setEvents((prev) => [...prev, newEvent]);
 
       const successMessage =
-        eventData.type === "meeting"
+        eventData.type === "MEETING"
           ? CALENDAR_MESSAGES.MEETING_CREATED
-          : eventData.type === "event"
+          : eventData.type === "EVENT"
           ? CALENDAR_MESSAGES.EVENT_CREATED
           : CALENDAR_MESSAGES.TASK_CREATED;
 
@@ -240,9 +240,9 @@ export function useCalendarEvents(initialEvents: CalendarEvent[] = []) {
         );
 
         const successMessage =
-          eventData.type === "meeting"
+          eventData.type === "MEETING"
             ? CALENDAR_MESSAGES.MEETING_UPDATED
-            : eventData.type === "event"
+            : eventData.type === "EVENT"
             ? CALENDAR_MESSAGES.EVENT_UPDATED
             : CALENDAR_MESSAGES.TASK_UPDATED;
 
@@ -299,7 +299,16 @@ export function useCalendarData(
 
     // Filter by schedule type
     if (viewState.selectedScheduleType !== "all") {
-      filtered = filterEventsByType(filtered, viewState.selectedScheduleType);
+      // Convert new enum values to old format for compatibility
+      const oldScheduleType =
+        viewState.selectedScheduleType === "MEETING"
+          ? "meeting"
+          : viewState.selectedScheduleType === "EVENT"
+          ? "event"
+          : viewState.selectedScheduleType === "TASK"
+          ? "task"
+          : "all";
+      filtered = filterEventsByType(filtered, oldScheduleType);
     }
 
     // Filter by date range based on view mode

@@ -21,12 +21,16 @@ export function useFacultyData(initialData: any[]) {
    */
   const tableData = useMemo((): FacultyTableData[] => {
     return facultyData.map((member: FacultyMember) => ({
-      id: member.id,
+      id: member.id.toString(),
       name: member.name,
       position: member.department || "Not specified",
       email: member.email,
       phone: member.phone,
       availability: member.status === "Available" ? "available" : "busy",
+      department: member.department,
+      specializations: member.specializations,
+      office: member.office,
+      bio: member.bio,
       officeHours: {
         start: "9:00 AM",
         end: "5:00 PM",
@@ -39,10 +43,10 @@ export function useFacultyData(initialData: any[]) {
    * Handle faculty updates with optimistic updates
    */
   const handleFacultyUpdate = useCallback(
-    (facultyId: number, updatedData: FacultyUpdateData) => {
+    (facultyId: string, updatedData: FacultyUpdateData) => {
       setFacultyData((prev: FacultyMember[]) =>
         prev.map((faculty: FacultyMember) =>
-          faculty.id === facultyId
+          faculty.id.toString() === facultyId
             ? {
                 ...faculty,
                 name: updatedData.name ?? faculty.name,
@@ -61,9 +65,11 @@ export function useFacultyData(initialData: any[]) {
   /**
    * Handle faculty demotion with confirmation
    */
-  const handleFacultyDemote = useCallback((facultyId: number) => {
+  const handleFacultyDemote = useCallback((facultyId: string) => {
     setFacultyData((prev: FacultyMember[]) =>
-      prev.filter((faculty: FacultyMember) => faculty.id !== facultyId)
+      prev.filter(
+        (faculty: FacultyMember) => faculty.id.toString() !== facultyId
+      )
     );
     toast.success(FACULTY_MESSAGES.DEMOTE_SUCCESS);
   }, []);

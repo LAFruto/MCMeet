@@ -151,8 +151,18 @@ export function getCurrentTimePosition(date: Date): number {
  */
 export function calculateEventPosition(
   event: AgendaEvent,
-  viewMode: "day" | "week" | "month"
+  viewMode: "list" | "day" | "week" | "month"
 ): { top: number; height: number; width?: number; left?: number } {
+  // For list view, return default positioning
+  if (viewMode === "list") {
+    return {
+      top: 0,
+      height: 60, // Fixed height for list items
+      width: 100,
+      left: 0,
+    };
+  }
+
   const startHour = getHours(event.startTime);
   const startMinute = getMinutes(event.startTime);
   const endHour = getHours(event.endTime);
@@ -264,7 +274,7 @@ export function eventsOverlap(
  */
 export function calculateOverlappingEvents(
   events: AgendaEvent[],
-  viewMode: "day" | "week" | "month"
+  viewMode: "list" | "day" | "week" | "month"
 ): Array<
   AgendaEvent & {
     position: {
