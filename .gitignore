@@ -1,0 +1,35 @@
+# Root-level ignores
+
+# IDE (applies to whole project)
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files (applies to whole project)
+.DS_Store
+Thumbs.db
+*.pem
+
+# Logs (applies to whole project)
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Package manager
+node_modules/
+.pnpm-store/
+
+# Environment files (root level only, frontend has its own)
+.env
+.env*.local
+
+# Build artifacts (if you add more packages later)
+dist/
+build/
+
+# Note: frontend/ has its own .gitignore for Next.js specific files
+

@@ -1,0 +1,43 @@
+{
+  "name": "mcmeet",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Modern faculty booking system with AI-powered chat interface",
+  "scripts": {
+    "dev": "pnpm --filter frontend dev",
+    "build": "pnpm --filter frontend build",
+    "start": "pnpm --filter frontend start",
+    "db:migrate": "pnpm --filter frontend prisma migrate dev",
+    "db:generate": "pnpm --filter frontend prisma generate",
+    "db:studio": "pnpm --filter frontend prisma studio",
+    "db:seed": "pnpm --filter frontend db:seed",
+    "create-accounts": "pnpm --filter frontend create-accounts",
+    "setup": "pnpm install && pnpm db:generate",
+    "clean": "pnpm --filter frontend exec rm -rf node_modules .next",
+    "format": "pnpm --filter frontend exec prettier --write .",
+    "type-check": "pnpm --filter frontend exec tsc --noEmit"
+  },
+  "workspaces": [
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/MCMeet.git"
+  },
+  "keywords": [
+    "faculty-booking",
+    "appointment-system",
+    "next.js",
+    "better-auth",
+    "prisma",
+    "ai-chat"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
+
