@@ -32,10 +32,6 @@ MCMeet/
 └── README.md                # Project documentation
 ```
 
-## 🎯 Coding Standards
-
-We follow strict coding standards defined in `frontend/.cursorrules`:
-
 ### General Rules
 - ✅ Use TypeScript for all code
 - ✅ Prefer functional programming over classes
@@ -121,7 +117,6 @@ export function MyComponent({ title, onSubmit }: MyComponentProps) {
 
 Before submitting a PR, ensure:
 
-- [ ] Code follows the `.cursorrules` standards
 - [ ] TypeScript has no errors (`pnpm type-check`)
 - [ ] Application builds successfully (`pnpm build`)
 - [ ] Changes work in both dark and light mode
