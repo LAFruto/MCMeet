@@ -170,6 +170,8 @@ export interface ChatState {
   isLoading: boolean;
   selectedQuickAction: string | null;
   currentPage: PageContext;
+  sessionId?: string;
+  studentId?: string;
   addMessage: (message: Omit<Message, "id" | "timestamp">) => void;
   setInput: (input: string) => void;
   clearMessages: () => void;
@@ -177,6 +179,8 @@ export interface ChatState {
   sendMessage: (content: string) => Promise<void>;
   setSelectedQuickAction: (action: string | null) => void;
   setCurrentPage: (page: PageContext) => void;
+  setSessionId: (sessionId: string) => void;
+  setStudentId: (studentId: string) => void;
 }
 
 export interface PageContext {

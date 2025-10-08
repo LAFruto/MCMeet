@@ -1,10 +1,7 @@
-import { apiClient } from "./api-client";
-import { API_ENDPOINTS } from "../config/api";
-import {
-  getResponseForInput,
-  CHAT_RESPONSES,
-} from "../constants/mock-responses";
+import { CHAT_RESPONSES } from "../constants/mock-responses";
 import type { Message } from "../types";
+
+const WEBHOOK_URL = "/api/chat/proxy";
 
 /**
  * Chat service - handles all chat-related API calls
@@ -16,18 +13,42 @@ export const chatService = {
    */
   async sendMessage(
     content: string,
-    context?: { page: string; data?: Record<string, unknown> }
+    context?: { page: string; data?: Record<string, unknown> },
+    sessionId?: string,
+    studentId?: string
   ): Promise<string> {
-    // TODO: Replace with actual API call when backend is ready
-    // const response = await apiClient.post<{ reply: string }>(
-    //   API_ENDPOINTS.CHAT,
-    //   { message: content, context }
-    // );
-    // return response.data.reply;
+    try {
+      const payload: Record<string, unknown> = {
+        sessionId: sessionId || "guest",
+        action: "sendMessage",
+        chatInput: content,
+      };
+      if (studentId) {
+        (payload as any)["student-id"] = studentId;
+      }
 
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    return getResponseForInput(content);
+      const resp = await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await resp.json().catch(async () => {
+        try {
+          const text = await resp.text();
+          return { output: text };
+        } catch {
+          return {};
+        }
+      });
+      const output = (data as any)?.output ?? (data as any)?.json?.output ?? (data as any)?.data?.output;
+      if (!resp.ok || typeof output !== "string") {
+        throw new Error("Invalid webhook response");
+      }
+      return output;
+    } catch (e) {
+      // Fallback message if webhook fails
+      return CHAT_RESPONSES.WELCOME;
+    }
   },
 
   /**

@@ -39,6 +39,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   currentPage: {
     page: "home",
   },
+  sessionId: undefined,
+  studentId: undefined,
 
   /**
    * Add a new message to the chat
@@ -91,10 +93,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setCurrentPage: (page) => set({ currentPage: page }),
 
   /**
+   * Set session id for webhook calls
+   */
+  setSessionId: (sessionId: string) => set({ sessionId }),
+
+  /**
+   * Set student id (current user id)
+   */
+  setStudentId: (studentId: string) => set({ studentId }),
+
+  /**
    * Send a message and get AI response
    */
   sendMessage: async (content: string) => {
-    const { addMessage, setIsLoading, currentPage } = get();
+    const { addMessage, setIsLoading, currentPage, sessionId, studentId } = get();
+    const isFirstMessage = get().messages.length <= 1;
 
     // Add user message
     addMessage({ role: "user", content });
@@ -106,8 +119,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
     setIsLoading(true);
 
     try {
-      // Call chat service (uses mock for now, will call real API later)
-      const response = await chatService.sendMessage(content, currentPage);
+      // Call webhook service
+      const response = await chatService.sendMessage(
+        content,
+        currentPage,
+        sessionId,
+        studentId
+      );
 
       // Add assistant response
       addMessage({

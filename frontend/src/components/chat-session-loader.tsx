@@ -17,9 +17,13 @@ import type { Message } from "@/lib/types";
 export function ChatSessionLoader() {
   const { data: session } = useSession();
   const messages = useChatStore((state) => state.messages);
+  const setSessionId = useChatStore((state) => state.setSessionId);
+  const setStudentId = useChatStore((state) => state.setStudentId);
 
   useEffect(() => {
     if (!session?.user?.id) return;
+    setSessionId(session.user.id);
+    setStudentId(session.user.id);
 
     // Get user-specific storage key
     const userStorageKey = `${STORAGE_KEYS.CHAT_MESSAGES_PREFIX}${session.user.id}`;
