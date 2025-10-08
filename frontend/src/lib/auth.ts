@@ -67,6 +67,10 @@ export const auth = betterAuth({
       clientId: process.env.MICROSOFT_CLIENT_ID || "",
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET || "",
       enabled: !!process.env.MICROSOFT_CLIENT_ID,
+      tenantId: process.env.MICROSOFT_TENANT_ID || "",
+      // Request Graph basic profile scope to allow /me call
+      // Uncomment if the provider supports custom scopes in your Better Auth version
+      // scope: "openid profile email User.Read",
     },
   },
   plugins: [
