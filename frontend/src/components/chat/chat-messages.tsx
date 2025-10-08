@@ -7,7 +7,7 @@ import { User } from "lucide-react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { MarkdownRenderer } from "./markdown-renderer";
+import { RichMessageRenderer } from "./rich-message-renderer";
 
 export function ChatMessages() {
   const { messages, isLoading } = useChatStore();
@@ -94,7 +94,10 @@ export function ChatMessages() {
                       : "bg-muted text-foreground rounded-tl-sm border border-border"
                   }`}
                 >
-                  <MarkdownRenderer content={message.content} isUser={isUser} />
+                  <RichMessageRenderer
+                    message={message.content}
+                    isUser={isUser}
+                  />
                 </div>
               </div>
             </div>

@@ -19,7 +19,14 @@ export function ChatSessionLoader() {
   const messages = useChatStore((state) => state.messages);
 
   useEffect(() => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn("No session or user ID found");
+      }
+      return;
+    }
+
+    useChatStore.setState({ userId: session.user.id });
 
     // Get user-specific storage key
     const userStorageKey = `${STORAGE_KEYS.CHAT_MESSAGES_PREFIX}${session.user.id}`;

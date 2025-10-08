@@ -4,6 +4,7 @@ import type { Booking, BookingRequest } from "../types";
 
 /**
  * Query keys for booking-related queries
+ * Provides hierarchical cache keys for React Query
  */
 export const bookingKeys = {
   all: ["bookings"] as const,
@@ -14,18 +15,24 @@ export const bookingKeys = {
 };
 
 /**
- * Hook to fetch user's bookings
+ * Custom hook to fetch current user's bookings
+ * Uses React Query for caching and automatic refetching
+ *
+ * @returns {UseQueryResult<Booking[]>} Query result with bookings data
  */
 export function useUserBookings() {
   return useQuery({
     queryKey: bookingKeys.lists(),
     queryFn: () => bookingService.getUserBookings(),
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 1 * 60 * 1000,
   });
 }
 
 /**
- * Hook to fetch a single booking by ID
+ * Custom hook to fetch a specific booking by ID
+ *
+ * @param {string} id - The booking ID to fetch
+ * @returns {UseQueryResult<Booking | null>} Query result with booking data
  */
 export function useBookingById(id: string) {
   return useQuery({
@@ -37,7 +44,11 @@ export function useBookingById(id: string) {
 }
 
 /**
- * Hook to create a new booking
+ * Custom hook to create a new booking
+ * Automatically invalidates booking list cache on success
+ *
+ * @returns {UseMutationResult<Booking, Error, BookingRequest>} Mutation result
+ * @remarks Note: Bookings should be created via AI agent for best UX
  */
 export function useCreateBooking() {
   const queryClient = useQueryClient();
@@ -45,14 +56,17 @@ export function useCreateBooking() {
   return useMutation({
     mutationFn: (booking: BookingRequest) => bookingService.create(booking),
     onSuccess: () => {
-      // Invalidate and refetch bookings
       queryClient.invalidateQueries({ queryKey: bookingKeys.lists() });
     },
   });
 }
 
 /**
- * Hook to cancel a booking
+ * Custom hook to cancel an existing booking
+ * Automatically invalidates booking list cache on success
+ *
+ * @returns {UseMutationResult<boolean, Error, string>} Mutation result
+ * @remarks Note: Cancellations should be done via AI agent for best UX
  */
 export function useCancelBooking() {
   const queryClient = useQueryClient();
@@ -60,14 +74,17 @@ export function useCancelBooking() {
   return useMutation({
     mutationFn: (id: string) => bookingService.cancel(id),
     onSuccess: () => {
-      // Invalidate and refetch bookings
       queryClient.invalidateQueries({ queryKey: bookingKeys.lists() });
     },
   });
 }
 
 /**
- * Hook to reschedule a booking
+ * Custom hook to reschedule an existing booking
+ * Automatically invalidates booking list cache on success
+ *
+ * @returns {UseMutationResult<Booking, Error, Object>} Mutation result
+ * @remarks Note: Rescheduling should be done via AI agent for best UX
  */
 export function useRescheduleBooking() {
   const queryClient = useQueryClient();
@@ -83,7 +100,6 @@ export function useRescheduleBooking() {
       newEndTime: Date;
     }) => bookingService.reschedule(id, newStartTime, newEndTime),
     onSuccess: () => {
-      // Invalidate and refetch bookings
       queryClient.invalidateQueries({ queryKey: bookingKeys.lists() });
     },
   });

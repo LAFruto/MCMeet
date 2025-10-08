@@ -2,7 +2,12 @@ import { API_CONFIG } from "../config/api";
 import type { ApiResponse, ApiError } from "../types";
 
 /**
- * Make HTTP request with error handling
+ * Makes an HTTP request with timeout and error handling
+ * @template T - The expected response data type
+ * @param {string} endpoint - The API endpoint path
+ * @param {RequestInit} [options={}] - Fetch API options
+ * @returns {Promise<ApiResponse<T>>} The API response
+ * @throws {ApiError} When the request fails or times out
  */
 async function request<T>(
   endpoint: string,
@@ -52,7 +57,11 @@ async function request<T>(
 }
 
 /**
- * GET request
+ * Performs a GET request
+ * @template T - The expected response data type
+ * @param {string} endpoint - The API endpoint path
+ * @param {RequestInit} [options] - Additional fetch options
+ * @returns {Promise<ApiResponse<T>>} The API response
  */
 async function get<T>(
   endpoint: string,
@@ -62,7 +71,12 @@ async function get<T>(
 }
 
 /**
- * POST request
+ * Performs a POST request
+ * @template T - The expected response data type
+ * @param {string} endpoint - The API endpoint path
+ * @param {unknown} [body] - Request body to be JSON stringified
+ * @param {RequestInit} [options] - Additional fetch options
+ * @returns {Promise<ApiResponse<T>>} The API response
  */
 async function post<T>(
   endpoint: string,
@@ -77,7 +91,12 @@ async function post<T>(
 }
 
 /**
- * PUT request
+ * Performs a PUT request
+ * @template T - The expected response data type
+ * @param {string} endpoint - The API endpoint path
+ * @param {unknown} [body] - Request body to be JSON stringified
+ * @param {RequestInit} [options] - Additional fetch options
+ * @returns {Promise<ApiResponse<T>>} The API response
  */
 async function put<T>(
   endpoint: string,
@@ -92,7 +111,11 @@ async function put<T>(
 }
 
 /**
- * DELETE request
+ * Performs a DELETE request
+ * @template T - The expected response data type
+ * @param {string} endpoint - The API endpoint path
+ * @param {RequestInit} [options] - Additional fetch options
+ * @returns {Promise<ApiResponse<T>>} The API response
  */
 async function deleteRequest<T>(
   endpoint: string,
@@ -102,7 +125,8 @@ async function deleteRequest<T>(
 }
 
 /**
- * Base API client with error handling and retry logic
+ * Base API client with error handling and timeout support
+ * Provides HTTP methods (GET, POST, PUT, DELETE) with consistent error handling
  */
 export const apiClient = {
   get,

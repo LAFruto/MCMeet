@@ -26,7 +26,6 @@ import {
   LogOut,
   Moon,
   Plus,
-  Shield,
   Sun,
   User,
   Users,

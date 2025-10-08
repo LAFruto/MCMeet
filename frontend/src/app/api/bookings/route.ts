@@ -8,14 +8,16 @@ import {
 } from "@/lib/rate-limit";
 
 /**
- * Bookings API endpoint with authorization and rate limiting
- * GET /api/bookings - List bookings
- * POST /api/bookings - Create booking
- */
-
-/**
- * GET /api/bookings
- * Students see their own bookings, admins see all
+ * Retrieves bookings with role-based access control
+ * Students see their own bookings, admins see all bookings
+ *
+ * @route GET /api/bookings
+ * @param {NextRequest} request - The Next.js request object
+ * @returns {Promise<NextResponse>} JSON response with bookings array or error
+ *
+ * @throws {401} Unauthorized - User must be signed in
+ * @throws {429} Too Many Requests - Rate limit exceeded
+ * @throws {500} Internal Server Error - Server error occurred
  */
 export async function GET(request: NextRequest) {
   try {
@@ -76,8 +78,18 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/bookings
- * Create a new booking with authorization checks
+ * Creates a new booking with authorization checks
+ * Users can only book for themselves unless they have admin privileges
+ *
+ * @route POST /api/bookings
+ * @param {NextRequest} request - The Next.js request object containing booking data
+ * @returns {Promise<NextResponse>} JSON response with created booking or error
+ *
+ * @throws {401} Unauthorized - User must be signed in
+ * @throws {400} Bad Request - Missing required fields
+ * @throws {403} Forbidden - Cannot book for other users without admin access
+ * @throws {429} Too Many Requests - Rate limit exceeded
+ * @throws {500} Internal Server Error - Server error occurred
  */
 export async function POST(request: NextRequest) {
   try {

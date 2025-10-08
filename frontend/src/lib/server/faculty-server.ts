@@ -1,35 +1,36 @@
-import { FACULTY_MEMBERS } from "../constants/faculty-data";
 import type { FacultyMember } from "../types";
 
 /**
- * Fetch all faculty members
- * TODO: Replace with actual API call when backend is ready
+ * Fetches all faculty members from the server
+ * Server-side function for use in React Server Components
+ *
+ * @returns {Promise<FacultyMember[]>} Array of all faculty members
+ * @remarks Currently returns empty array - AI agent provides faculty info
  */
 export async function getFacultyMembers(): Promise<FacultyMember[]> {
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  return FACULTY_MEMBERS;
+  return [];
 }
 
 /**
- * Fetch single faculty member by ID
+ * Fetches a specific faculty member by ID from the server
+ * Server-side function for use in React Server Components
+ *
+ * @param {number} id - The faculty member ID to fetch
+ * @returns {Promise<FacultyMember | null>} The faculty member if found, null otherwise
  */
 export async function getFacultyById(
   id: number
 ): Promise<FacultyMember | null> {
-  await new Promise((resolve) => setTimeout(resolve, 50));
-  return FACULTY_MEMBERS.find((f) => f.id === id) || null;
+  return null;
 }
 
 /**
- * Search faculty members by query
+ * Searches faculty members by name or department
+ * Server-side function for use in React Server Components
+ *
+ * @param {string} query - The search query string
+ * @returns {Promise<FacultyMember[]>} Array of matching faculty members
  */
 export async function searchFaculty(query: string): Promise<FacultyMember[]> {
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  const lowerQuery = query.toLowerCase();
-  return FACULTY_MEMBERS.filter(
-    (f) =>
-      f.name.toLowerCase().includes(lowerQuery) ||
-      f.department.toLowerCase().includes(lowerQuery) ||
-      f.specializations.some((s) => s.toLowerCase().includes(lowerQuery))
-  );
+  return [];
 }

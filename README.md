@@ -1,174 +1,207 @@
-# MCMeet
+# MCMeet - AI-Powered Faculty Booking System
 
-A modern faculty booking system built with Next.js, Better Auth, and Prisma.
+Modern faculty booking system with AI-powered chat interface for seamless student-faculty interaction.
 
-## 🚀 Features
+## Features
 
-- **Smart Chat Interface** - AI-powered assistant to help with bookings
-- **Faculty Management** - Browse and book appointments with faculty members
-- **Role-Based Access Control** - Student and Admin roles with different permissions
-- **Secure Authentication** - Email/password with optional 2FA, social logins (Google, Microsoft)
-- **Real-time Updates** - Modern, responsive UI with optimistic updates
-- **Schedule Management** - View and manage your meetings and availability
+- 🤖 **AI Chat Agent** - Natural language booking via N8N + Ollama
+- 📅 **Smart Scheduling** - Intelligent faculty availability management
+- 👥 **Role-Based Access** - Student, Faculty, and Admin roles
+- 🔐 **Secure Authentication** - Better Auth with session management
+- 📊 **Real-time Updates** - React Query for optimal data synchronization
+- 🎨 **Modern UI** - Shadcn/UI with Tailwind CSS
 
-## 📁 Project Structure
+## Tech Stack
 
-```
-MCMeet/
-└── frontend/          # Next.js application
-    ├── src/
-    │   ├── app/       # App router pages
-    │   ├── components/# React components
-    │   └── lib/       # Utilities, services, stores
-    ├── prisma/        # Database schema & migrations
-    └── public/        # Static assets
-```
+### Frontend
+- **Framework**: Next.js 15 (App Router)
+- **UI**: Shadcn/UI + Radix UI + Tailwind CSS
+- **State**: Zustand + React Query
+- **Auth**: Better Auth
+- **Database**: Prisma + PostgreSQL
 
-## 🛠️ Tech Stack
+### Backend (AI Agent)
+- **Workflow**: N8N
+- **LLM**: Ollama (Llama 3.2)
+- **Vector Store**: Qdrant
+- **Database**: PostgreSQL
 
-- **Framework**: Next.js 15 with App Router
-- **Authentication**: Better Auth
-- **Database**: PostgreSQL with Prisma ORM
-- **UI**: Shadcn UI, Radix UI, Tailwind CSS
-- **State Management**: Zustand
-- **Forms**: React Hook Form + Zod
-- **Email**: Nodemailer
-- **Rate Limiting**: Upstash Redis
-
-## 📦 Getting Started
+## Quick Start
 
 ### Prerequisites
-
-- Node.js 18+ 
-- pnpm (recommended) or npm
-- PostgreSQL database
+- Node.js 18+
+- pnpm 8+
+- Docker & Docker Compose
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/MCMeet.git
-   cd MCMeet
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pnpm install
-   # or
-   pnpm setup
-   ```
-
-3. **Set up environment variables**
-   ```bash
-   cd frontend
-   cp .env.example .env
-   ```
-   
-   Fill in your `frontend/.env` file with:
-   - Database connection URL
-   - Better Auth secret and URL
-   - OAuth credentials (optional)
-   - SMTP settings (optional)
-   - Upstash Redis credentials (optional)
-
-4. **Set up the database**
-   ```bash
-   cd ..  # Back to root
-   pnpm db:migrate
-   pnpm db:generate
-   ```
-
-5. **Create test accounts**
-   ```bash
-   # Start dev server in one terminal
-   pnpm dev
-   
-   # In another terminal, create accounts
-   pnpm create-accounts
-   ```
-   
-   Then manually set the admin role in Prisma Studio:
-   ```bash
-   pnpm db:studio
-   ```
-
-6. **Start the development server**
-   ```bash
-   pnpm dev
-   ```
-
-   Visit [http://localhost:3000](http://localhost:3000)
-
-### Available Commands (from root)
-
+1. **Clone & Install:**
 ```bash
-# Development
-pnpm dev                # Start dev server
-pnpm build              # Build for production
-pnpm start              # Start production server
-
-# Database
-pnpm db:migrate         # Run migrations
-pnpm db:generate        # Generate Prisma client
-pnpm db:studio          # Open Prisma Studio
-pnpm db:seed            # Seed database
-
-# Setup
-pnpm setup              # Install + generate Prisma
-pnpm create-accounts    # Create test accounts
-
-# Utilities
-pnpm type-check         # TypeScript check
-pnpm clean              # Clean build files
+git clone https://github.com/YOUR_USERNAME/MCMeet.git
+cd MCMeet
+pnpm install
 ```
 
-## 🔐 Test Accounts
+2. **Setup Database:**
+```bash
+# Frontend uses PostgreSQL at localhost:5433
+pnpm db:generate
+pnpm db:migrate
+pnpm db:seed
+```
 
-After running `pnpm create-accounts`:
+3. **Configure Environment:**
+```bash
+# Create frontend/.env.local
+DATABASE_URL="postgresql://postgres:123@localhost:5433/mcmeet"
+BETTER_AUTH_SECRET="your-secret-key"
+BETTER_AUTH_URL="http://localhost:3000"
+NEXT_PUBLIC_N8N_WEBHOOK_URL="http://localhost:5678/webhook/chat-agent"
+```
 
-- **Student**: `student@mcmeet.dev` / `Student123!`
-- **Admin**: `admin@mcmeet.dev` / `Admin123!` (set role in database)
+4. **Start N8N Backend:**
+```bash
+cd backend
 
-## 📚 Documentation
+# Start essential services (recommended)
+docker compose up postgres n8n -d
 
-For detailed documentation, see:
-- [Frontend README](./frontend/README.md) - Complete setup and API docs
-- [Better Auth Setup](./frontend/BETTER_AUTH_SETUP.md) - Authentication configuration
-- [Environment Variables](./frontend/ENVIRONMENT_VARIABLES.md) - All env vars explained
+# OR start with AI support (optional)
+docker compose --profile ai up -d
 
-## 🏗️ Deployment
+# Access N8N at http://localhost:5678
+```
 
-### Vercel (Recommended)
+**Troubleshooting:** If you get port conflicts:
+```bash
+docker compose down
+docker network prune -f
+docker compose up postgres n8n -d
+```
 
-1. Push to GitHub
-2. Import project in Vercel
-3. Set Root Directory to `frontend`
-4. Add environment variables
-5. Deploy!
+5. **Start Frontend:**
+```bash
+pnpm dev
+# Access app at http://localhost:3000
+```
 
-### Other Platforms
+## Project Structure
 
-Set the build settings:
-- **Root Directory**: `frontend`
-- **Build Command**: `pnpm build` or `npm run build`
-- **Output Directory**: `frontend/.next`
-- **Install Command**: `pnpm install` or `npm install`
+```
+MCMeet/
+├── frontend/          # Next.js application
+│   ├── src/
+│   │   ├── app/       # App router pages
+│   │   ├── components/# React components
+│   │   ├── lib/       # Services, hooks, utils
+│   │   └── prisma/    # Database schema
+│   └── package.json
+│
+└── backend/           # N8N AI workflow
+    ├── docker-compose.yml
+    ├── n8n/           # N8N configuration
+    └── shared/        # Shared files with N8N
+```
 
-## 🤝 Contributing
+## Development
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+```bash
+# Run frontend dev server
+pnpm dev
 
-## 📄 License
+# Database commands
+pnpm db:migrate    # Run migrations
+pnpm db:generate   # Generate Prisma client
+pnpm db:studio     # Open Prisma Studio
+pnpm db:seed       # Seed database
 
-This project is licensed under the MIT License.
+# Create test accounts
+pnpm create-accounts
 
-## 👤 Author
+# Type checking
+pnpm type-check
+```
 
-Your Name - [@yourhandle](https://github.com/YOUR_USERNAME)
+## N8N Workflow Setup
 
-## 🙏 Acknowledgments
+1. Open http://localhost:5678
+2. Create N8N account
+3. Configure credentials:
+   - PostgreSQL: `host.docker.internal:5432`
+   - Ollama: `http://ollama:11434`
+4. Activate the AI agent workflow
+5. Test webhook: `http://localhost:5678/webhook/chat-agent`
 
-- Built with [Better Auth](https://better-auth.com)
-- UI components from [Shadcn UI](https://ui.shadcn.com)
-- Icons from [Lucide](https://lucide.dev)
+See [backend/README.md](backend/README.md) for detailed N8N setup.
 
+## Troubleshooting
+
+### Common Issues
+
+**Port 5678 already in use:**
+```bash
+cd backend
+docker compose down
+docker network prune -f
+docker compose up postgres n8n -d
+```
+
+**Database connection issues:**
+- Ensure PostgreSQL is running: `docker ps`
+- Check connection string in `.env.local`
+- Use `localhost:5433` for frontend, `host.docker.internal:5432` for N8N
+
+**N8N not responding:**
+- Check if container is running: `docker ps`
+- View logs: `docker logs n8n -f`
+- Access N8N at http://localhost:5678
+
+## Architecture
+
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│   Next.js   │────▶│ N8N Webhook  │────▶│  AI Agent   │
+│  Frontend   │     │              │     │  + Ollama   │
+└─────────────┘     └──────────────┘     └──────┬──────┘
+      │                                          │
+      │              ┌──────────────┐            │
+      └─────────────▶│  PostgreSQL  │◀───────────┘
+                     │   Database   │
+                     └──────────────┘
+```
+
+## Key Technologies
+
+- **Next.js 15**: App Router, Server Components, Server Actions
+- **Better Auth**: Modern authentication with session management
+- **Prisma**: Type-safe database ORM
+- **React Query**: Server state management
+- **Zustand**: Client state management
+- **N8N**: Low-code workflow automation
+- **Ollama**: Local LLM inference
+- **Shadcn/UI**: High-quality UI components
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start development server |
+| `pnpm build` | Build for production |
+| `pnpm start` | Start production server |
+| `pnpm db:migrate` | Run database migrations |
+| `pnpm db:seed` | Seed database with test data |
+| `pnpm create-accounts` | Create test user accounts |
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+This project follows the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/).
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request

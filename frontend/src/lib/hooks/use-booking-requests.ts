@@ -1,5 +1,4 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MOCK_BOOKING_REQUESTS } from "../constants/booking-requests";
 import type {
   BookingRequest,
   BookingRequestStatus,
@@ -7,6 +6,7 @@ import type {
 
 /**
  * Query keys for booking request-related queries
+ * Provides hierarchical cache keys for React Query with filter support
  */
 export const bookingRequestKeys = {
   all: ["bookingRequests"] as const,
@@ -21,7 +21,14 @@ export const bookingRequestKeys = {
 };
 
 /**
- * Hook to fetch all booking requests with optional filters
+ * Custom hook to fetch booking requests with optional filters
+ * Supports filtering by status, faculty ID, or student ID
+ *
+ * @param {Object} [filters] - Optional filter criteria
+ * @param {BookingRequestStatus} [filters.status] - Filter by request status
+ * @param {string} [filters.facultyId] - Filter by faculty member ID
+ * @param {string} [filters.studentId] - Filter by student ID
+ * @returns {UseQueryResult<BookingRequest[]>} Query result with booking requests
  */
 export function useBookingRequests(filters?: {
   status?: BookingRequestStatus;
@@ -31,60 +38,49 @@ export function useBookingRequests(filters?: {
   return useQuery({
     queryKey: bookingRequestKeys.list(filters),
     queryFn: async (): Promise<BookingRequest[]> => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      let filteredRequests = [...MOCK_BOOKING_REQUESTS];
-
-      if (filters?.status) {
-        filteredRequests = filteredRequests.filter(
-          (request) => request.status === filters.status
-        );
-      }
-
-      if (filters?.facultyId) {
-        filteredRequests = filteredRequests.filter(
-          (request) => request.facultyId === filters.facultyId
-        );
-      }
-
-      if (filters?.studentId) {
-        filteredRequests = filteredRequests.filter(
-          (request) => request.studentId === filters.studentId
-        );
-      }
-
-      return filteredRequests;
+      // TODO: Implement API call to fetch booking requests
+      // const response = await fetch('/api/bookings/requests', { method: 'GET' });
+      // return response.json();
+      return [];
     },
   });
 }
 
 /**
- * Hook to fetch only pending booking requests
+ * Custom hook to fetch only pending booking requests
+ * Convenience wrapper around useBookingRequests with pending status filter
+ *
+ * @returns {UseQueryResult<BookingRequest[]>} Query result with pending requests
  */
 export function usePendingBookingRequests() {
   return useBookingRequests({ status: "pending" });
 }
 
 /**
- * Hook to fetch a single booking request by ID
+ * Custom hook to fetch a specific booking request by ID
+ *
+ * @param {string} id - The booking request ID to fetch
+ * @returns {UseQueryResult<BookingRequest | null>} Query result with booking request data
  */
 export function useBookingRequestById(id: string) {
   return useQuery({
     queryKey: bookingRequestKeys.detail(id),
     queryFn: async (): Promise<BookingRequest | null> => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const request = MOCK_BOOKING_REQUESTS.find((req) => req.id === id);
-      return request || null;
+      // TODO: Implement API call to fetch single booking request
+      // const response = await fetch(`/api/bookings/requests/${id}`);
+      // return response.json();
+      return null;
     },
     enabled: !!id,
   });
 }
 
 /**
- * Hook to approve a booking request
+ * Custom hook to approve a booking request
+ * Automatically invalidates booking request cache on success
+ *
+ * @returns {UseMutationResult} Mutation result for approval action
+ * @remarks Note: Approvals should be done via AI agent for best UX
  */
 export function useApproveBookingRequest() {
   const queryClient = useQueryClient();
@@ -97,25 +93,13 @@ export function useApproveBookingRequest() {
       requestId: string;
       approvedBy: string;
     }): Promise<BookingRequest> => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Find the request and update it
-      const request = MOCK_BOOKING_REQUESTS.find((req) => req.id === requestId);
-      if (!request) {
-        throw new Error("Booking request not found");
-      }
-
-      const updatedRequest: BookingRequest = {
-        ...request,
-        status: "approved",
-        approvedAt: new Date(),
-        approvedBy,
-      };
-
-      // In a real app, this would be an API call
-      // For now, we'll just return the updated request
-      return updatedRequest;
+      // TODO: Implement API call to approve booking request
+      // const response = await fetch(`/api/bookings/requests/${requestId}/approve`, {
+      //   method: 'POST',
+      //   body: JSON.stringify({ approvedBy })
+      // });
+      // return response.json();
+      throw new Error("Not implemented - use AI agent to approve bookings");
     },
     onSuccess: () => {
       // Invalidate and refetch booking requests
@@ -127,7 +111,11 @@ export function useApproveBookingRequest() {
 }
 
 /**
- * Hook to reject a booking request
+ * Custom hook to reject a booking request
+ * Automatically invalidates booking request cache on success
+ *
+ * @returns {UseMutationResult} Mutation result for rejection action
+ * @remarks Note: Rejections should be done via AI agent for best UX
  */
 export function useRejectBookingRequest() {
   const queryClient = useQueryClient();
@@ -140,25 +128,13 @@ export function useRejectBookingRequest() {
       requestId: string;
       rejectionReason?: string;
     }): Promise<BookingRequest> => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Find the request and update it
-      const request = MOCK_BOOKING_REQUESTS.find((req) => req.id === requestId);
-      if (!request) {
-        throw new Error("Booking request not found");
-      }
-
-      const updatedRequest: BookingRequest = {
-        ...request,
-        status: "rejected",
-        rejectedAt: new Date(),
-        rejectionReason,
-      };
-
-      // In a real app, this would be an API call
-      // For now, we'll just return the updated request
-      return updatedRequest;
+      // TODO: Implement API call to reject booking request
+      // const response = await fetch(`/api/bookings/requests/${requestId}/reject`, {
+      //   method: 'POST',
+      //   body: JSON.stringify({ rejectionReason })
+      // });
+      // return response.json();
+      throw new Error("Not implemented - use AI agent to reject bookings");
     },
     onSuccess: () => {
       // Invalidate and refetch booking requests
@@ -170,7 +146,11 @@ export function useRejectBookingRequest() {
 }
 
 /**
- * Hook to cancel a booking request
+ * Custom hook to cancel a booking request
+ * Automatically invalidates booking request cache on success
+ *
+ * @returns {UseMutationResult} Mutation result for cancellation action
+ * @remarks Note: Cancellations should be done via AI agent for best UX
  */
 export function useCancelBookingRequest() {
   const queryClient = useQueryClient();
@@ -181,24 +161,12 @@ export function useCancelBookingRequest() {
     }: {
       requestId: string;
     }): Promise<BookingRequest> => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Find the request and update it
-      const request = MOCK_BOOKING_REQUESTS.find((req) => req.id === requestId);
-      if (!request) {
-        throw new Error("Booking request not found");
-      }
-
-      const updatedRequest: BookingRequest = {
-        ...request,
-        status: "cancelled",
-        cancelledAt: new Date(),
-      };
-
-      // In a real app, this would be an API call
-      // For now, we'll just return the updated request
-      return updatedRequest;
+      // TODO: Implement API call to cancel booking request
+      // const response = await fetch(`/api/bookings/requests/${requestId}/cancel`, {
+      //   method: 'POST'
+      // });
+      // return response.json();
+      throw new Error("Not implemented - use AI agent to cancel bookings");
     },
     onSuccess: () => {
       // Invalidate and refetch booking requests

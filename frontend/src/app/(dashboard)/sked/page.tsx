@@ -5,8 +5,15 @@ import { CalendarErrorBoundary } from "./index";
 import { CalendarLoadingSkeleton } from "./index";
 import { getAdminSession } from "@/lib/authz";
 
+/**
+ * Sked (Schedule) Page
+ *
+ * Admin-only calendar view for managing all bookings across the system.
+ * Provides a comprehensive view of scheduled meetings and appointments.
+ *
+ * @returns {Promise<JSX.Element>} The sked page component
+ */
 export default async function SkedPage() {
-  // Require admin role
   await getAdminSession();
 
   const bookings = await getUserBookings();

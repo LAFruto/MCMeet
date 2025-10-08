@@ -3,7 +3,19 @@ import { useChatStore } from "../stores/chat-store";
 import type { PageContext } from "../types";
 
 /**
- * Convenience hook for chat operations
+ * Custom hook for managing chat state and operations
+ * Provides convenient access to chat messages, input state, and actions
+ *
+ * @returns {Object} Chat state and action functions
+ * @property {Message[]} messages - Array of chat messages
+ * @property {string} input - Current input value
+ * @property {boolean} isLoading - Loading state for async operations
+ * @property {string | null} selectedQuickAction - Currently selected quick action
+ * @property {function} setInput - Sets the input value
+ * @property {function} sendMessage - Sends a message to the AI agent
+ * @property {function} clearMessages - Clears all messages
+ * @property {function} setSelectedQuickAction - Sets the selected quick action
+ * @property {function} setCurrentPage - Sets the current page context
  */
 export function useChat() {
   const messages = useChatStore((state) => state.messages);
@@ -35,7 +47,11 @@ export function useChat() {
 }
 
 /**
- * Hook to automatically set page context
+ * Custom hook to automatically set page context for contextual AI responses
+ * Updates the chat store with current page information when component mounts
+ *
+ * @param {PageContext["page"]} page - The current page identifier
+ * @param {Record<string, unknown>} [data] - Optional page-specific data for context
  */
 export function usePageContext(
   page: PageContext["page"],

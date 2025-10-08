@@ -15,7 +15,11 @@ interface MarkdownRendererProps {
 
 export function MarkdownRenderer({ content, isUser }: MarkdownRendererProps) {
   return (
-    <div className={`prose prose-sm max-w-none ${isUser ? 'prose-invert' : 'dark:prose-invert'}`}>
+    <div
+      className={`prose prose-sm max-w-none ${
+        isUser ? "prose-invert" : "dark:prose-invert"
+      }`}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -44,9 +48,17 @@ export function MarkdownRenderer({ content, isUser }: MarkdownRendererProps) {
           },
           pre: ({ children }) => <>{children}</>,
           p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-          ul: ({ children }) => <ul className="my-2 space-y-1">{children}</ul>,
-          ol: ({ children }) => <ol className="my-2 space-y-1">{children}</ol>,
-          li: ({ children }) => <li className="ml-4">{children}</li>,
+          ul: ({ children }) => (
+            <ul className="my-2 space-y-1 list-disc list-outside ml-4">
+              {children}
+            </ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="my-2 space-y-1 list-decimal list-outside ml-4">
+              {children}
+            </ol>
+          ),
+          li: ({ children }) => <li>{children}</li>,
           a: ({ href, children }) => (
             <a
               href={href}
@@ -138,5 +150,3 @@ interface CodeProps {
   className?: string;
   children?: React.ReactNode;
 }
-
-

@@ -4,8 +4,16 @@ import { headers } from "next/headers";
 import { checkChatRateLimit, createRateLimitHeaders } from "@/lib/rate-limit";
 
 /**
- * Chat API endpoint with rate limiting and authentication
- * POST /api/chat
+ * Handles chat message requests with authentication and rate limiting
+ * 
+ * @route POST /api/chat
+ * @param {NextRequest} request - The Next.js request object
+ * @returns {Promise<NextResponse>} JSON response with chat message or error
+ * 
+ * @throws {401} Unauthorized - User must be signed in
+ * @throws {400} Bad Request - Invalid or missing message
+ * @throws {429} Too Many Requests - Rate limit exceeded
+ * @throws {500} Internal Server Error - Server error occurred
  */
 export async function POST(request: NextRequest) {
   try {

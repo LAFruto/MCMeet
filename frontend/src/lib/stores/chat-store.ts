@@ -1,8 +1,8 @@
 import React from "react";
 import { create } from "zustand";
 import { chatService } from "../services/chat-service";
-import { getStorageItem, setStorageItem, STORAGE_KEYS } from "../utils/storage";
-import type { Message, ChatState, PageContext } from "../types";
+import type { ChatState, Message, PageContext } from "../types";
+import { setStorageItem, STORAGE_KEYS } from "../utils/storage";
 
 /**
  * Get user-specific storage key for chat messages
@@ -39,6 +39,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   currentPage: {
     page: "home",
   },
+  userId: undefined, // Will be set by ChatSessionLoader
 
   /**
    * Add a new message to the chat
@@ -91,10 +92,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setCurrentPage: (page) => set({ currentPage: page }),
 
   /**
+   * Set user ID (called by ChatSessionLoader)
+   */
+  setUserId: (userId?: string) => set({ userId }),
+
+  /**
    * Send a message and get AI response
    */
   sendMessage: async (content: string) => {
-    const { addMessage, setIsLoading, currentPage } = get();
+    const { addMessage, setIsLoading, currentPage, userId } = get();
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("Chat Store - Sending message with userId:", userId);
+      console.log("Chat Store - Full state:", { currentPage, userId });
+    }
 
     // Add user message
     addMessage({ role: "user", content });
@@ -106,8 +117,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
     setIsLoading(true);
 
     try {
-      // Call chat service (uses mock for now, will call real API later)
-      const response = await chatService.sendMessage(content, currentPage);
+      // Call chat service with userId for booking requests
+      const response = await chatService.sendMessage(
+        content,
+        currentPage,
+        userId
+      );
 
       // Add assistant response
       addMessage({

@@ -26,11 +26,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { User } from "@/lib/types";
-import { MOCK_USER_ACCOUNTS } from "@/app/(dashboard)/faculty/mock-data";
 import { FACULTY_CONSTANTS } from "@/app/(dashboard)/faculty/constants";
 
-// Use centralized mock data
-const AVAILABLE_USERS = MOCK_USER_ACCOUNTS;
+// TODO: Replace with database query for available users
+const AVAILABLE_USERS: User[] = [];
 
 interface PromoteUserDialogProps {
   onClose: () => void;

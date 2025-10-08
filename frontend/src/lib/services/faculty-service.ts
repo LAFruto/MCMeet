@@ -1,85 +1,56 @@
 import { apiClient } from "./api-client";
 import { API_ENDPOINTS } from "../config/api";
-import { FACULTY_MEMBERS } from "../constants/faculty-data";
 import type { FacultyMember } from "../types";
 
 /**
- * Faculty service - handles all faculty-related API calls
- * Currently uses mock data, replace with real API calls
+ * Faculty service for managing faculty member information and availability
+ * Integrates with the AI agent for dynamic faculty queries
+ *
+ * @remarks
+ * Faculty information is primarily accessed through the AI agent chat interface
+ * for a more natural query experience
  */
 export const facultyService = {
   /**
-   * Get all faculty members
+   * Retrieves all faculty members
+   * @returns {Promise<FacultyMember[]>} Array of all faculty members
+   * @remarks Currently returns empty array - AI agent provides faculty info
    */
   async getAll(): Promise<FacultyMember[]> {
-    // TODO: Replace with actual API call when backend is ready
-    // const response = await apiClient.get<FacultyMember[]>(API_ENDPOINTS.FACULTY);
-    // return response.data;
-
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return FACULTY_MEMBERS;
+    // TODO: Implement API call - AI agent provides faculty info
+    return [];
   },
 
   /**
-   * Get faculty member by ID
+   * Retrieves a specific faculty member by ID
+   * @param {number} id - The faculty member ID
+   * @returns {Promise<FacultyMember | null>} The faculty member if found, null otherwise
    */
   async getById(id: number): Promise<FacultyMember | null> {
-    // TODO: Replace with actual API call
-    // const response = await apiClient.get<FacultyMember>(
-    //   API_ENDPOINTS.FACULTY_BY_ID(id)
-    // );
-    // return response.data;
-
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return FACULTY_MEMBERS.find((f) => f.id === id) || null;
+    // TODO: Implement API call
+    return null;
   },
 
   /**
-   * Get faculty availability
+   * Retrieves availability slots for a faculty member
+   * @param {number} id - The faculty member ID
+   * @returns {Promise<{facultyId: number; availableSlots: string[]}>} Faculty availability data
    */
   async getAvailability(id: number): Promise<{
     facultyId: number;
     availableSlots: string[];
   }> {
-    // TODO: Replace with actual API call
-    // const response = await apiClient.get<{ availableSlots: string[] }>(
-    //   API_ENDPOINTS.FACULTY_AVAILABILITY(id)
-    // );
-    // return { facultyId: id, ...response.data };
-
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    return {
-      facultyId: id,
-      availableSlots: [
-        "2024-10-04 14:00",
-        "2024-10-04 15:00",
-        "2024-10-05 10:00",
-        "2024-10-05 11:00",
-      ],
-    };
+    // TODO: Implement API call
+    return { facultyId: id, availableSlots: [] };
   },
 
   /**
-   * Search faculty by name or department
+   * Searches for faculty members by name or department
+   * @param {string} query - Search query string
+   * @returns {Promise<FacultyMember[]>} Array of matching faculty members
    */
   async search(query: string): Promise<FacultyMember[]> {
-    // TODO: Replace with actual API call
-    // const response = await apiClient.get<FacultyMember[]>(
-    //   `${API_ENDPOINTS.FACULTY}?search=${encodeURIComponent(query)}`
-    // );
-    // return response.data;
-
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const lowerQuery = query.toLowerCase();
-    return FACULTY_MEMBERS.filter(
-      (f) =>
-        f.name.toLowerCase().includes(lowerQuery) ||
-        f.department.toLowerCase().includes(lowerQuery) ||
-        f.specializations.some((s) => s.toLowerCase().includes(lowerQuery))
-    );
+    // TODO: Implement API call
+    return [];
   },
 };
