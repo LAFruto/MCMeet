@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getFacultyMembers } from "@/lib/server/faculty-server";
 import { FacultyClient } from "./faculty-client";
 import { FacultyErrorBoundary } from "./index";
 import { FacultyLoadingSkeleton } from "./index";
 import { getAdminSession } from "@/lib/authz";
+
+export const metadata: Metadata = {
+  title: "Faculty | MCMeet",
+  description: "Manage faculty members and user roles",
+};
 
 /**
  * Faculty Directory Page

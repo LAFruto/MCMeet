@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { ChatInterface } from "./chat-interface";
+
+export const metadata: Metadata = {
+  title: "Home | MCMeet",
+  description:
+    "AI-powered chat interface for booking faculty meetings and managing appointments",
+};
 
 /**
  * Home Page (Dashboard)

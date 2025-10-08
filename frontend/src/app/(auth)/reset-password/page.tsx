@@ -1,6 +1,19 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ResetPasswordForm } from "./reset-password-form";
 
+export const metadata: Metadata = {
+  title: "Reset Password | MCMeet",
+  description: "Reset your MCMeet account password",
+};
+
+/**
+ * Reset Password Page
+ *
+ * Page for users to reset their account password.
+ *
+ * @returns {JSX.Element} The reset password page component
+ */
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={<ResetPasswordSkeleton />}>

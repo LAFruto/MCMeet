@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getUserBookings } from "@/lib/server/booking-server";
 import { AgendaClient } from "./agenda-client";
 import { AgendaErrorBoundary } from "./index";
 import { AgendaLoadingSkeleton } from "./index";
+
+export const metadata: Metadata = {
+  title: "Agenda | MCMeet",
+  description: "View your scheduled meetings and appointments",
+};
 
 /**
  * Agenda Page

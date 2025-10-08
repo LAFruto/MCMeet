@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getUserBookings } from "@/lib/server/booking-server";
 import { SkedClient } from "./sked-client";
 import { CalendarErrorBoundary } from "./index";
 import { CalendarLoadingSkeleton } from "./index";
 import { getAdminSession } from "@/lib/authz";
+
+export const metadata: Metadata = {
+  title: "Sked | MCMeet",
+  description: "Manage and view all scheduled bookings",
+};
 
 /**
  * Sked (Schedule) Page
