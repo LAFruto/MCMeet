@@ -3,7 +3,7 @@
  */
 
 export const FACULTY_CONSTANTS = {
-  SEARCH_PLACEHOLDER: "Search faculty by name, position, or email...",
+  SEARCH_PLACEHOLDER: "name, position, or email...",
   DEFAULT_OFFICE_HOURS: {
     start: "9:00 AM",
     end: "5:00 PM",

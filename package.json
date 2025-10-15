@@ -11,6 +11,7 @@
     "db:generate": "pnpm --filter frontend prisma generate",
     "db:studio": "pnpm --filter frontend prisma studio",
     "db:seed": "pnpm --filter frontend db:seed",
+    "register-faculty": "pnpm --filter frontend register-faculty",
     "create-accounts": "pnpm --filter frontend create-accounts",
     "setup": "pnpm install && pnpm db:generate",
     "type-check": "pnpm --filter frontend exec tsc --noEmit"

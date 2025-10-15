@@ -69,7 +69,7 @@ export function AppSidebar() {
   const userName = session?.user?.name || "User";
   const userEmail = session?.user?.email || "";
   const userRole = (session?.user as any)?.role || "student";
-  const isAdmin = userRole === "admin";
+  const isAdmin = userRole === "ADMIN";
   const userAvatar = userName
     .split(" ")
     .map((n) => n[0])

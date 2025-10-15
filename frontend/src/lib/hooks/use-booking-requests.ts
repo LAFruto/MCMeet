@@ -38,10 +38,18 @@ export function useBookingRequests(filters?: {
   return useQuery({
     queryKey: bookingRequestKeys.list(filters),
     queryFn: async (): Promise<BookingRequest[]> => {
-      // TODO: Implement API call to fetch booking requests
-      // const response = await fetch('/api/bookings/requests', { method: 'GET' });
-      // return response.json();
-      return [];
+      const params = new URLSearchParams();
+      if (filters?.status) params.append("status", filters.status);
+      if (filters?.facultyId) params.append("facultyId", filters.facultyId);
+      if (filters?.studentId) params.append("studentId", filters.studentId);
+
+      const response = await fetch(
+        `/api/booking-requests?${params.toString()}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch booking requests");
+      }
+      return response.json();
     },
   });
 }
@@ -93,18 +101,30 @@ export function useApproveBookingRequest() {
       requestId: string;
       approvedBy: string;
     }): Promise<BookingRequest> => {
-      // TODO: Implement API call to approve booking request
-      // const response = await fetch(`/api/bookings/requests/${requestId}/approve`, {
-      //   method: 'POST',
-      //   body: JSON.stringify({ approvedBy })
-      // });
-      // return response.json();
-      throw new Error("Not implemented - use AI agent to approve bookings");
+      const response = await fetch(
+        `/api/booking-requests/${requestId}/approve`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ approvedBy }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to approve booking request");
+      }
+
+      const data = await response.json();
+      return data.request;
     },
     onSuccess: () => {
-      // Invalidate and refetch booking requests
+      // Invalidate and refetch booking requests and bookings
       queryClient.invalidateQueries({
         queryKey: bookingRequestKeys.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["bookings"],
       });
     },
   });
@@ -128,13 +148,22 @@ export function useRejectBookingRequest() {
       requestId: string;
       rejectionReason?: string;
     }): Promise<BookingRequest> => {
-      // TODO: Implement API call to reject booking request
-      // const response = await fetch(`/api/bookings/requests/${requestId}/reject`, {
-      //   method: 'POST',
-      //   body: JSON.stringify({ rejectionReason })
-      // });
-      // return response.json();
-      throw new Error("Not implemented - use AI agent to reject bookings");
+      const response = await fetch(
+        `/api/booking-requests/${requestId}/reject`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rejectionReason }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to reject booking request");
+      }
+
+      const data = await response.json();
+      return data.request;
     },
     onSuccess: () => {
       // Invalidate and refetch booking requests

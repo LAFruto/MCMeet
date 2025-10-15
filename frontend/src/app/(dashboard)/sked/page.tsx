@@ -15,13 +15,21 @@ export const metadata: Metadata = {
  * Sked (Schedule) Page
  *
  * Admin-only calendar view for managing all bookings across the system.
- * Provides a comprehensive view of scheduled meetings and appointments.
+ * Provides a comprehensive view of all scheduled meetings and appointments.
+ *
+ * Features:
+ * - View all bookings system-wide
+ * - Filter by faculty, type, location
+ * - Week/Day/Month views
+ * - Real-time booking status
  *
  * @returns {Promise<JSX.Element>} The sked page component
  */
 export default async function SkedPage() {
+  // Verify admin access
   await getAdminSession();
 
+  // Get ALL bookings from the system (admin view)
   const bookings = await getUserBookings();
 
   return (

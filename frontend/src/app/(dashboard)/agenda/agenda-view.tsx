@@ -70,6 +70,7 @@ interface AgendaViewProps {
   onChangeViewMode: (mode: "list" | "day" | "week" | "month") => void;
   stats: AgendaStats;
   currentTimePosition: number;
+  userId: string;
 }
 
 /**
@@ -87,6 +88,7 @@ export function AgendaView({
   onChangeViewMode,
   stats,
   currentTimePosition,
+  userId,
 }: AgendaViewProps) {
   const [selectedEvent, setSelectedEvent] = useState<AgendaEvent | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<BookingRequest | null>(
@@ -97,30 +99,32 @@ export function AgendaView({
     "all" | "pending" | "approved" | "rejected"
   >("all");
 
-  // Booking request hooks
+  // Booking request hooks - fetch requests for current user
   const { data: bookingRequests = [], isLoading: isLoadingRequests } =
     usePendingBookingRequests();
   const approveRequest = useApproveBookingRequest();
   const rejectRequest = useRejectBookingRequest();
 
   // Transform meetings to agenda events
-  const agendaEvents: AgendaEvent[] = meetings.map((meeting) => ({
-    id: meeting.id.toString(),
-    title: meeting.title,
-    startTime: new Date(meeting.startTime),
-    endTime: new Date(meeting.endTime),
-    type: (meeting.scheduleType as "meeting" | "event" | "task") || "meeting",
-    location: meeting.location,
-    description: meeting.purpose || "",
-    attendees: [
-      meeting.faculty?.name || "Unknown Faculty",
-      meeting.student?.name || "Unknown Student",
-    ].filter(Boolean),
-    color: getEventColor(
-      (meeting.scheduleType as "meeting" | "event" | "task") || "meeting"
-    ),
-    status: "confirmed",
-  }));
+  const agendaEvents: AgendaEvent[] = meetings
+    .filter((meeting) => meeting.startTime && meeting.endTime) // Filter out invalid meetings
+    .map((meeting) => ({
+      id: meeting.id.toString(),
+      title: meeting.title,
+      startTime: new Date(meeting.startTime),
+      endTime: new Date(meeting.endTime),
+      type: (meeting.scheduleType as "meeting" | "event" | "task") || "meeting",
+      location: meeting.location,
+      description: meeting.purpose || "",
+      attendees: [
+        meeting.faculty?.name || "Unknown Faculty",
+        meeting.student?.name || "Unknown Student",
+      ].filter(Boolean),
+      color: getEventColor(
+        (meeting.scheduleType as "meeting" | "event" | "task") || "meeting"
+      ),
+      status: "confirmed",
+    }));
 
   /**
    * Render detailed event popover
@@ -531,17 +535,22 @@ export function AgendaView({
    * Render list view with meeting requests
    */
   const renderListView = () => {
-    const filteredRequests = bookingRequests.filter((request) => {
-      const matchesSearch =
-        request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        request.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        request.purpose.toLowerCase().includes(searchQuery.toLowerCase());
+    // Filter out invalid requests and apply search/status filters
+    const filteredRequests = bookingRequests
+      .filter((request) => request.startTime && request.title) // Valid data check
+      .filter((request) => {
+        const matchesSearch =
+          request.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          request.studentName
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          request.purpose?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesStatus =
-        statusFilter === "all" || request.status === statusFilter;
+        const matchesStatus =
+          statusFilter === "all" || request.status === statusFilter;
 
-      return matchesSearch && matchesStatus;
-    });
+        return matchesSearch && matchesStatus;
+      });
 
     const pendingCount = bookingRequests.filter(
       (r) => r.status === "pending"
@@ -696,7 +705,7 @@ export function AgendaView({
                                   hour: "numeric",
                                   minute: "2-digit",
                                   hour12: true,
-                                }).format(request.startTime)}
+                                }).format(new Date(request.startTime))}
                               </span>
                             </div>
                             {request.location && (

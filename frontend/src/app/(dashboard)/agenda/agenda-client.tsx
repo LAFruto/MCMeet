@@ -7,6 +7,7 @@ import { useAgendaView, useAgendaDataFromMeetings } from "./hooks";
 
 interface AgendaClientProps {
   meetings: Booking[];
+  userId: string;
 }
 
 /**
@@ -17,8 +18,9 @@ interface AgendaClientProps {
  * No editing capabilities, focused on viewing and navigation.
  *
  * @param meetings - Array of meetings from server
+ * @param userId - Current user's ID for filtering
  */
-export function AgendaClient({ meetings }: AgendaClientProps) {
+export function AgendaClient({ meetings, userId }: AgendaClientProps) {
   usePageContext("agenda");
 
   // Initialize agenda view state
@@ -45,6 +47,7 @@ export function AgendaClient({ meetings }: AgendaClientProps) {
         onChangeViewMode={changeViewMode}
         stats={stats}
         currentTimePosition={currentTimePosition}
+        userId={userId}
       />
     </div>
   );

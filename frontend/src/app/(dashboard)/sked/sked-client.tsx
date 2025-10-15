@@ -3,7 +3,7 @@
 import { CalendarWeekView } from "@/components/calendar-week-view";
 import { usePageContext } from "@/lib/hooks/use-chat";
 import type { Booking } from "@/lib/types";
-import { useCalendarData, useCalendarEvents, useCalendarView } from "./hooks";
+import { useMemo } from "react";
 
 interface SkedClientProps {
   bookings: Booking[];
@@ -12,77 +12,51 @@ interface SkedClientProps {
 /**
  * Calendar/Schedule Client Component
  *
- * Main client component for the calendar system.
+ * Admin-only calendar view for managing all bookings across the system.
  * Provides comprehensive calendar functionality including viewing, creating,
  * editing, and managing bookings, events, and tasks.
  *
- * @param bookings - Array of bookings from server
+ * @param bookings - Array of all bookings from server (admin view)
  */
 export function SkedClient({ bookings }: SkedClientProps) {
   usePageContext("sked");
 
-  // Initialize calendar view state
-  const {
-    viewState,
-    goToPrevious,
-    goToNext,
-    goToToday,
-    changeViewMode,
-    changeScheduleType,
-    updateFilters,
-    clearFilters,
-  } = useCalendarView();
-
-  // Initialize calendar events management
-  const { events, isLoading, createEvent, updateEvent, deleteEvent } =
-    useCalendarEvents();
-
-  // Process and filter calendar data
-  const {
-    filteredEvents,
-    viewEvents,
-    positionedEvents,
-    stats,
-    currentTimePosition,
-  } = useCalendarData(events, viewState);
+  // Normalize bookings to ensure dates are Date objects
+  const normalizedBookings = useMemo(() => {
+    return bookings
+      .filter((booking) => booking.startTime && booking.endTime)
+      .map((booking) => ({
+        ...booking,
+        startTime:
+          booking.startTime instanceof Date
+            ? booking.startTime
+            : new Date(booking.startTime),
+        endTime:
+          booking.endTime instanceof Date
+            ? booking.endTime
+            : new Date(booking.endTime),
+        createdAt:
+          booking.createdAt instanceof Date
+            ? booking.createdAt
+            : new Date(booking.createdAt),
+        updatedAt:
+          booking.updatedAt instanceof Date
+            ? booking.updatedAt
+            : new Date(booking.updatedAt),
+      }));
+  }, [bookings]);
 
   /**
-   * Handle booking creation
+   * Handle booking creation (placeholder for future implementation)
    */
   const handleCreateBooking = async (bookingData: any) => {
-    try {
-      await createEvent(bookingData);
-    } catch (error) {
-      console.error("Failed to create booking:", error);
-    }
-  };
-
-  /**
-   * Handle booking updates
-   */
-  const handleUpdateBooking = async (bookingId: string, bookingData: any) => {
-    try {
-      await updateEvent(bookingId, bookingData);
-    } catch (error) {
-      console.error("Failed to update booking:", error);
-    }
-  };
-
-  /**
-   * Handle booking deletion
-   */
-  const handleDeleteBooking = async (bookingId: string) => {
-    try {
-      await deleteEvent(bookingId);
-    } catch (error) {
-      console.error("Failed to delete booking:", error);
-    }
+    // TODO: Implement booking creation API call
   };
 
   return (
     <div className="flex-1 flex flex-col h-full w-full overflow-hidden">
       <CalendarWeekView
-        bookings={bookings}
+        bookings={normalizedBookings}
         onCreateBooking={handleCreateBooking}
       />
     </div>

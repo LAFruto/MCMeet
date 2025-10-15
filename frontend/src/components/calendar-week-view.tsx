@@ -81,62 +81,7 @@ const MONTH_NAMES = [
   "December",
 ];
 
-// Placeholder demo events for testing
-const PLACEHOLDER_EVENTS: Booking[] = [
-  {
-    id: "placeholder-101",
-    title: "Client Meeting",
-    description: "Quarterly review",
-    facultyId: "faculty-001",
-    studentId: "demo",
-    startTime: new Date(new Date().setHours(9, 0, 0, 0)),
-    endTime: new Date(new Date().setHours(10, 0, 0, 0)),
-    status: "SCHEDULED",
-    scheduleType: "MEETING",
-    purpose: "Quarterly review",
-    location: "Online",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: "placeholder-102",
-    title: "Meetup with Team",
-    description: "Team sync",
-    facultyId: "faculty-002",
-    studentId: "demo",
-    startTime: new Date(new Date().setHours(9, 0, 0, 0)),
-    endTime: new Date(new Date().setHours(10, 0, 0, 0)),
-    status: "SCHEDULED",
-    scheduleType: "MEETING",
-    purpose: "Team sync",
-    location: "Room 305",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: "placeholder-103",
-    title: "Client Meeting",
-    description: "Project discussion",
-    facultyId: "faculty-003",
-    studentId: "demo",
-    startTime: (() => {
-      const date = new Date(Date.now() + 86400000);
-      date.setHours(9, 30, 0, 0);
-      return date;
-    })(),
-    endTime: (() => {
-      const date = new Date(Date.now() + 86400000);
-      date.setHours(10, 0, 0, 0);
-      return date;
-    })(),
-    status: "SCHEDULED",
-    scheduleType: "MEETING",
-    purpose: "Project discussion",
-    location: "Online",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
+// Note: Placeholder events removed - using real seeded data from database
 
 function getWeekDates(baseDate: Date) {
   const dates = [];
@@ -486,8 +431,16 @@ export function CalendarWeekView({
   const [locationType, setLocationType] = useState<LocationType>("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Combine real bookings with placeholder events
-  const allBookings = [...bookings, ...PLACEHOLDER_EVENTS];
+  // Convert bookings to ensure dates are Date objects
+  const allBookings = bookings
+    .filter((b) => b.startTime && b.endTime)
+    .map((b) => ({
+      ...b,
+      startTime: new Date(b.startTime),
+      endTime: new Date(b.endTime),
+      createdAt: new Date(b.createdAt),
+      updatedAt: new Date(b.updatedAt),
+    }));
 
   // Get unique faculty list
   const facultyList = Array.from(
@@ -548,7 +501,7 @@ export function CalendarWeekView({
   const filteredBookings = allBookings.filter((booking) => {
     // Schedule type filter
     if (scheduleType !== "all") {
-      const bookingType = booking.status === "COMPLETED" ? "event" : "meeting";
+      const bookingType = booking.scheduleType?.toLowerCase() || "meeting";
       if (bookingType !== scheduleType && scheduleType !== "task") {
         return false;
       }
@@ -673,10 +626,22 @@ export function CalendarWeekView({
 
   function getBookingsForDate(date: Date) {
     const dateStr = formatDateKey(date);
-    return filteredBookings.filter((b) => {
-      const bookingDate = b.startTime.toISOString().split("T")[0];
-      return bookingDate === dateStr;
+    const bookingsForDate = filteredBookings.filter((b) => {
+      // Normalize both dates to just the date part (ignore time)
+      const bookingDate = new Date(
+        b.startTime.getFullYear(),
+        b.startTime.getMonth(),
+        b.startTime.getDate()
+      );
+      const targetDate = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+      );
+      return bookingDate.getTime() === targetDate.getTime();
     });
+
+    return bookingsForDate;
   }
 
   function renderBookingPopover(booking: Booking) {

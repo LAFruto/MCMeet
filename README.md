@@ -50,6 +50,12 @@ pnpm db:migrate
 pnpm db:seed
 ```
 
+3. **Create Faculty Login Accounts:**
+```bash
+# Create login accounts for all faculty (password: Faculty123)
+pnpm register-faculty
+```
+
 3. **Configure Environment:**
 ```bash
 # Create frontend/.env.local
@@ -190,7 +196,29 @@ docker compose up postgres n8n -d
 | `pnpm start` | Start production server |
 | `pnpm db:migrate` | Run database migrations |
 | `pnpm db:seed` | Seed database with test data |
+| `pnpm register-faculty` | Create faculty login accounts (password: Faculty123) |
 | `pnpm create-accounts` | Create test user accounts |
+| `pnpm type-check` | Run TypeScript type checking |
+
+## Test Accounts
+
+### Faculty (Password: Faculty123)
+All 10 faculty members can login with password `Faculty123`:
+- wbadong@mcm.edu.ph (Dr. Warren Badong - Professor)
+- npmagloyuan@mcm.edu.ph (Dr. Neil P. Magloyuan - Program Head)
+- daarzaga@mcm.edu.ph (Dr. Daisy Ann Arzaga - Professor)
+- rbadiang@mcm.edu.ph (Dr. Rogelio Badiang - Professor)
+- pcerna@mcm.edu.ph (Dr. Patrick Cerna - Professor)
+- crlungay@mcm.edu.ph (Dr. Christopher Rey Lungay - Professor)
+- mbaste@mcm.edu.ph (Dr. Martzel Baste - Professor)
+- gpilongo@mcm.edu.ph (Dr. Genevieve Pilongo - Professor)
+- clisondra@mcm.edu.ph (Dr. Cherry Lisondra - Professor)
+- rcascaro@mcm.edu.ph (Dr. Rhodessa Cascaro - Dean)
+
+### Students & Admin
+Use Better Auth's password reset flow to set passwords for:
+- **Admin:** admin@mcm.edu.ph
+- **Students:** msantos@mcm.edu.ph, jgarcia@mcm.edu.ph, acruz@mcm.edu.ph
 
 ## License
 

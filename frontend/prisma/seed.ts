@@ -21,6 +21,7 @@ async function main() {
     await prisma.booking.deleteMany();
     await prisma.officeHours.deleteMany();
     await prisma.faculty.deleteMany();
+    await prisma.account.deleteMany();
     await prisma.department.deleteMany();
     await prisma.user.deleteMany();
   } catch (error) {
@@ -205,6 +206,9 @@ async function main() {
     }),
   ]);
 
+  // Note: Faculty accounts are created separately using the register-faculty script
+  // Run: pnpm register-faculty after seeding to create faculty login accounts
+
   // Create student users
   const studentUsers = await Promise.all([
     prisma.user.create({
@@ -288,7 +292,7 @@ async function main() {
       data: {
         userId: facultyUsers[2].id,
         department: "CCIS - College of Computing and Information Sciences",
-        position: "Associate Professor",
+        position: "Professor",
         specializations: [
           "Intelligent Systems",
           "Artificial Intelligence",
@@ -1096,6 +1100,335 @@ async function main() {
         facultyId: facultyUsers[3].id, // Dr. Rogelio Badiang
       },
     }),
+
+    // Week-long recurring meetings for better calendar visualization
+    prisma.booking.create({
+      data: {
+        title: "Algorithm Design Tutorial",
+        description: "Weekly tutorial on algorithm design patterns",
+        startTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 1,
+          11,
+          0
+        ),
+        endTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 1,
+          12,
+          0
+        ),
+        location: "Room 400",
+        status: MeetingStatus.CONFIRMED,
+        scheduleType: ScheduleType.MEETING,
+        purpose: "Tutorial on algorithm optimization",
+        studentId: studentUsers[2].id,
+        facultyId: facultyUsers[6].id, // Dr. Martzel Baste
+      },
+    }),
+    prisma.booking.create({
+      data: {
+        title: "Java OOP Workshop",
+        description: "Object-oriented programming concepts workshop",
+        startTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 2,
+          13,
+          0
+        ),
+        endTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 2,
+          15,
+          0
+        ),
+        location: "Room 600",
+        status: MeetingStatus.SCHEDULED,
+        scheduleType: ScheduleType.EVENT,
+        purpose: "OOP workshop for advanced students",
+        studentId: studentUsers[0].id,
+        facultyId: facultyUsers[7].id, // Dr. Genevieve Pilongo
+      },
+    }),
+
+    // Same-day multiple bookings (different faculty)
+    prisma.booking.create({
+      data: {
+        title: "Database Design Consultation",
+        description: "Database schema review and optimization",
+        startTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 3,
+          14,
+          0
+        ),
+        endTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 3,
+          15,
+          30
+        ),
+        location: "Room 600",
+        status: MeetingStatus.CONFIRMED,
+        scheduleType: ScheduleType.MEETING,
+        purpose: "Database optimization guidance",
+        studentId: studentUsers[1].id,
+        facultyId: facultyUsers[4].id, // Dr. Patrick Cerna
+      },
+    }),
+    prisma.booking.create({
+      data: {
+        title: "Machine Learning Workshop",
+        description: "Introduction to neural networks and deep learning",
+        startTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 4,
+          10,
+          0
+        ),
+        endTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 4,
+          12,
+          0
+        ),
+        location: "Room 400",
+        status: MeetingStatus.SCHEDULED,
+        scheduleType: ScheduleType.EVENT,
+        purpose: "ML fundamentals training",
+        studentId: studentUsers[2].id,
+        facultyId: facultyUsers[2].id, // Dr. Daisy Ann Arzaga
+      },
+    }),
+
+    // End of week meetings
+    prisma.booking.create({
+      data: {
+        title: "Weekly Progress Review",
+        description: "Weekly review of student progress and upcoming tasks",
+        startTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 5,
+          15,
+          0
+        ),
+        endTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 5,
+          16,
+          0
+        ),
+        location: "Faculty Room",
+        status: MeetingStatus.SCHEDULED,
+        scheduleType: ScheduleType.MEETING,
+        purpose: "Weekly progress check-in",
+        studentId: studentUsers[0].id,
+        facultyId: facultyUsers[1].id, // Dr. Neil P. Magloyuan
+      },
+    }),
+
+    // Next week bookings for extended calendar view
+    prisma.booking.create({
+      data: {
+        title: "Operating Systems Lab Session",
+        description: "Hands-on practice with OS concepts",
+        startTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 8,
+          9,
+          0
+        ),
+        endTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 8,
+          11,
+          0
+        ),
+        location: "Room 400",
+        status: MeetingStatus.SCHEDULED,
+        scheduleType: ScheduleType.EVENT,
+        purpose: "OS practical session",
+        studentId: studentUsers[1].id,
+        facultyId: facultyUsers[8].id, // Dr. Cherry Lisondra
+      },
+    }),
+    prisma.booking.create({
+      data: {
+        title: "IT Infrastructure Planning Meeting",
+        description: "Discussion on IT infrastructure improvements",
+        startTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 9,
+          13,
+          0
+        ),
+        endTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 9,
+          14,
+          30
+        ),
+        location: "Cisco Lab",
+        status: MeetingStatus.SCHEDULED,
+        scheduleType: ScheduleType.MEETING,
+        purpose: "Infrastructure planning",
+        studentId: studentUsers[2].id,
+        facultyId: facultyUsers[5].id, // Dr. Christopher Rey Lungay
+      },
+    }),
+
+    // Cancelled booking example
+    prisma.booking.create({
+      data: {
+        title: "Network Troubleshooting Workshop",
+        description: "Workshop on network diagnostics and troubleshooting",
+        startTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 6,
+          14,
+          0
+        ),
+        endTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 6,
+          16,
+          0
+        ),
+        location: "Cisco Lab",
+        status: MeetingStatus.CANCELLED,
+        scheduleType: ScheduleType.EVENT,
+        purpose: "Network troubleshooting training",
+        studentId: studentUsers[0].id,
+        facultyId: facultyUsers[0].id, // Dr. Warren Badong
+        cancelledAt: new Date(),
+      },
+    }),
+
+    // Early morning meetings
+    prisma.booking.create({
+      data: {
+        title: "Early Morning Code Review",
+        description: "Review of coding assignments and best practices",
+        startTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 2,
+          8,
+          30
+        ),
+        endTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 2,
+          9,
+          30
+        ),
+        location: "Room 400",
+        status: MeetingStatus.CONFIRMED,
+        scheduleType: ScheduleType.MEETING,
+        purpose: "Code quality review",
+        studentId: studentUsers[1].id,
+        facultyId: facultyUsers[6].id, // Dr. Martzel Baste
+      },
+    }),
+
+    // Late afternoon meetings
+    prisma.booking.create({
+      data: {
+        title: "Software Design Patterns Discussion",
+        description: "Advanced software design patterns and architectures",
+        startTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 3,
+          16,
+          0
+        ),
+        endTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 3,
+          17,
+          30
+        ),
+        location: "Room 600",
+        status: MeetingStatus.SCHEDULED,
+        scheduleType: ScheduleType.MEETING,
+        purpose: "Design patterns exploration",
+        studentId: studentUsers[0].id,
+        facultyId: facultyUsers[7].id, // Dr. Genevieve Pilongo
+      },
+    }),
+
+    // Back-to-back meetings (testing calendar overlap visualization)
+    prisma.booking.create({
+      data: {
+        title: "Data Structures Quick Consultation",
+        description: "Quick questions about tree and graph implementations",
+        startTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 4,
+          13,
+          0
+        ),
+        endTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 4,
+          13,
+          30
+        ),
+        location: "Room 400",
+        status: MeetingStatus.CONFIRMED,
+        scheduleType: ScheduleType.MEETING,
+        purpose: "Data structures clarification",
+        studentId: studentUsers[2].id,
+        facultyId: facultyUsers[6].id, // Dr. Martzel Baste
+      },
+    }),
+    prisma.booking.create({
+      data: {
+        title: "Algorithm Complexity Analysis",
+        description: "Deep dive into time and space complexity",
+        startTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 4,
+          13,
+          30
+        ),
+        endTime: new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 4,
+          14,
+          30
+        ),
+        location: "Room 400",
+        status: MeetingStatus.CONFIRMED,
+        scheduleType: ScheduleType.MEETING,
+        purpose: "Algorithm analysis tutorial",
+        studentId: studentUsers[1].id,
+        facultyId: facultyUsers[6].id, // Dr. Martzel Baste
+      },
+    }),
   ]);
 
   // Create chat sessions
@@ -1391,23 +1724,34 @@ async function main() {
   console.log(`   - ${chatMessages.length} chat messages`);
   console.log(`   - ${bookingRequests.length} booking requests`);
 
-  console.log("\n🔐 Test Accounts:");
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("Admin: admin@mcm.edu.ph (monitor bookings via Sked/Agenda)");
+  console.log("\n🔐 Next Steps:");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("⚠️  Faculty accounts NOT created yet!");
+  console.log("📝 Run this command to create faculty login accounts:");
+  console.log("   pnpm register-faculty");
+  console.log("\n👨‍🏫 Faculty users created:");
+  console.log("   - wbadong@mcm.edu.ph (Dr. Warren Badong - Professor)");
   console.log(
-    "Faculty: wbadong@mcm.edu.ph, npmagloyuan@mcm.edu.ph, daarzaga@mcm.edu.ph (pre-approved)"
+    "   - npmagloyuan@mcm.edu.ph (Dr. Neil P. Magloyuan - Program Head)"
   );
+  console.log("   - daarzaga@mcm.edu.ph (Dr. Daisy Ann Arzaga - Professor)");
+  console.log("   - rbadiang@mcm.edu.ph (Dr. Rogelio Badiang - Professor)");
+  console.log("   - pcerna@mcm.edu.ph (Dr. Patrick Cerna - Professor)");
   console.log(
-    "Students: msantos@mcm.edu.ph, jgarcia@mcm.edu.ph, acruz@mcm.edu.ph (create bookings via chatbot)"
+    "   - crlungay@mcm.edu.ph (Dr. Christopher Rey Lungay - Professor)"
   );
-  console.log("\n💡 Use Better Auth's password reset flow to set passwords");
+  console.log("   - mbaste@mcm.edu.ph (Dr. Martzel Baste - Professor)");
+  console.log("   - gpilongo@mcm.edu.ph (Dr. Genevieve Pilongo - Professor)");
+  console.log("   - clisondra@mcm.edu.ph (Dr. Cherry Lisondra - Professor)");
+  console.log("   - rcascaro@mcm.edu.ph (Dr. Rhodessa Cascaro - Dean)");
+  console.log("\n👤 Admin:");
+  console.log("   - admin@mcm.edu.ph (use password reset flow)");
+  console.log("\n👨‍🎓 Students (use password reset flow):");
+  console.log("   - msantos@mcm.edu.ph, jgarcia@mcm.edu.ph, acruz@mcm.edu.ph");
   console.log(
-    "🤖 Students can book appointments through the chatbot interface"
+    "\n💡 Password will be: Faculty123 (after running register-faculty)"
   );
-  console.log(
-    "👨‍💼 Admins can monitor and manage bookings via Sked and Agenda views"
-  );
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 }
 
 main()

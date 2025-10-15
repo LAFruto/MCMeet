@@ -26,7 +26,7 @@ export interface AuthSession {
  * Check if user is an admin
  */
 export function isAdmin(session: AuthSession | null): boolean {
-  return session?.user?.role === "admin";
+  return session?.user?.role === "ADMIN";
 }
 
 /**
