@@ -71,6 +71,7 @@ interface AgendaViewProps {
   stats: AgendaStats;
   currentTimePosition: number;
   userId: string;
+  userRole: string;
 }
 
 /**
@@ -89,6 +90,7 @@ export function AgendaView({
   stats,
   currentTimePosition,
   userId,
+  userRole,
 }: AgendaViewProps) {
   const [selectedEvent, setSelectedEvent] = useState<AgendaEvent | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<BookingRequest | null>(
@@ -717,40 +719,80 @@ export function AgendaView({
                           </div>
                         </div>
                         <div className="ml-4 flex-shrink-0">
-                          {request.status === "pending" && (
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  approveRequest.mutate({
-                                    requestId: request.id,
-                                    approvedBy: "current-user",
-                                  });
-                                }}
-                                className="h-8 cursor-pointer"
-                              >
-                                <CheckCircle className="w-4 h-4 mr-1" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  rejectRequest.mutate({
-                                    requestId: request.id,
-                                    rejectionReason:
-                                      "Not available at this time",
-                                  });
-                                }}
-                                className="h-8 cursor-pointer"
-                              >
-                                <XCircle className="w-4 h-4 mr-1" />
-                                Reject
-                              </Button>
-                            </div>
-                          )}
+                          {/* Faculty/Admin: Show approve/deny buttons for pending requests */}
+                          {request.status === "pending" &&
+                            (userRole === "FACULTY" ||
+                              userRole === "ADMIN") && (
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    approveRequest.mutate(
+                                      {
+                                        requestId: request.id,
+                                        approvedBy: userId,
+                                      },
+                                      {
+                                        onSuccess: () => {
+                                          window.location.reload();
+                                        },
+                                        onError: (error) => {
+                                          alert(
+                                            `Failed to approve: ${error.message}`
+                                          );
+                                        },
+                                      }
+                                    );
+                                  }}
+                                  className="h-8 cursor-pointer"
+                                  disabled={approveRequest.isPending}
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-1" />
+                                  {approveRequest.isPending
+                                    ? "Approving..."
+                                    : "Approve"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    rejectRequest.mutate(
+                                      {
+                                        requestId: request.id,
+                                        rejectionReason:
+                                          "Not available at this time",
+                                      },
+                                      {
+                                        onSuccess: () => {
+                                          window.location.reload();
+                                        },
+                                        onError: (error) => {
+                                          alert(
+                                            `Failed to reject: ${error.message}`
+                                          );
+                                        },
+                                      }
+                                    );
+                                  }}
+                                  className="h-8 cursor-pointer"
+                                  disabled={rejectRequest.isPending}
+                                >
+                                  <XCircle className="w-4 h-4 mr-1" />
+                                  {rejectRequest.isPending
+                                    ? "Rejecting..."
+                                    : "Reject"}
+                                </Button>
+                              </div>
+                            )}
+                          {/* Students: Read-only status badge */}
+                          {request.status === "pending" &&
+                            userRole === "STUDENT" && (
+                              <Badge variant="secondary" className="text-xs">
+                                Pending Review
+                              </Badge>
+                            )}
                         </div>
                       </div>
                     </div>
@@ -766,15 +808,46 @@ export function AgendaView({
           request={selectedRequest}
           isOpen={!!selectedRequest}
           onClose={() => setSelectedRequest(null)}
-          onApprove={(requestId) => {
-            approveRequest.mutate({ requestId, approvedBy: "current-user" });
-            setSelectedRequest(null);
-          }}
-          onReject={(requestId, reason) => {
-            rejectRequest.mutate({ requestId, rejectionReason: reason });
-            setSelectedRequest(null);
-          }}
-          showActions={true}
+          onApprove={
+            userRole === "FACULTY" || userRole === "ADMIN"
+              ? (requestId) => {
+                  approveRequest.mutate(
+                    { requestId, approvedBy: userId },
+                    {
+                      onSuccess: () => {
+                        setSelectedRequest(null);
+                        window.location.reload();
+                      },
+                      onError: (error) => {
+                        alert(`Failed to approve: ${error.message}`);
+                      },
+                    }
+                  );
+                }
+              : undefined
+          }
+          onReject={
+            userRole === "FACULTY" || userRole === "ADMIN"
+              ? (requestId, reason) => {
+                  rejectRequest.mutate(
+                    {
+                      requestId,
+                      rejectionReason: reason || "Request rejected",
+                    },
+                    {
+                      onSuccess: () => {
+                        setSelectedRequest(null);
+                        window.location.reload();
+                      },
+                      onError: (error) => {
+                        alert(`Failed to reject: ${error.message}`);
+                      },
+                    }
+                  );
+                }
+              : undefined
+          }
+          showActions={userRole === "FACULTY" || userRole === "ADMIN"}
         />
       </div>
     );

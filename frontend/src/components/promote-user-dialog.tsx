@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,9 +27,7 @@ import {
 } from "@/components/ui/select";
 import type { User } from "@/lib/types";
 import { FACULTY_CONSTANTS } from "@/app/(dashboard)/faculty/constants";
-
-// TODO: Replace with database query for available users
-const AVAILABLE_USERS: User[] = [];
+import { Textarea } from "@/components/ui/textarea";
 
 interface PromoteUserDialogProps {
   onClose: () => void;
@@ -43,18 +41,41 @@ export function PromoteUserDialog({
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     position: "",
     phone: "",
+    department: "",
+    specializations: [] as string[],
+    specializationsInput: "",
     officeHours: {
-      start: "",
-      end: "",
+      start: "09:00",
+      end: "17:00",
     },
     availableDays: [] as string[],
   });
 
+  // Fetch students on mount
+  useEffect(() => {
+    async function fetchStudents() {
+      try {
+        const response = await fetch("/api/users/students");
+        if (response.ok) {
+          const students = await response.json();
+          setAvailableUsers(students);
+        }
+      } catch (error) {
+        console.error("Failed to fetch students:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchStudents();
+  }, []);
+
   // Filter users based on search
-  const filteredUsers = AVAILABLE_USERS.filter(
+  const filteredUsers = availableUsers.filter(
     (user) =>
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -65,6 +86,9 @@ export function PromoteUserDialog({
     setFormData((prev) => ({
       ...prev,
       phone: user.phone || "",
+      department:
+        user.department ||
+        "CCIS - College of Computing and Information Sciences",
     }));
   };
 
@@ -78,10 +102,42 @@ export function PromoteUserDialog({
     setCurrentStep(1);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedUser) {
+    if (!selectedUser) return;
+
+    try {
+      // Parse specializations from comma-separated input
+      const specializations = formData.specializationsInput
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+
+      const response = await fetch(`/api/users/${selectedUser.id}/promote`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          position: formData.position,
+          phone: formData.phone,
+          department: formData.department,
+          specializations,
+          officeHours: formData.officeHours,
+          availableDays: formData.availableDays,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to promote user");
+      }
+
+      // Success! Call the parent callback and refresh
       onPromote({ userId: selectedUser.id, facultyData: formData });
+      window.location.reload();
+    } catch (error: any) {
+      alert(`Failed to promote user: ${error.message}`);
     }
   };
 
@@ -129,42 +185,58 @@ export function PromoteUserDialog({
 
           {/* User List */}
           <div className="max-h-64 overflow-y-auto">
-            {filteredUsers.map((user) => (
-              <div
-                key={user.id}
-                className={`flex items-center gap-3 p-2 border-b cursor-pointer transition-colors ${
-                  selectedUser?.id === user.id
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:bg-muted/50"
-                }`}
-                onClick={() => handleUserSelect(user)}
-              >
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="text-sm">
-                    {user.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()
-                      .slice(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm">{user.name}</div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {user.email}
-                  </div>
-                  {user.department && (
-                    <div className="text-xs text-muted-foreground">
-                      {user.department}
-                    </div>
-                  )}
+            {isLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="text-sm text-muted-foreground">
+                  Loading students...
                 </div>
-                <Badge variant="secondary" className="text-xs">
-                  User
-                </Badge>
               </div>
-            ))}
+            ) : filteredUsers.length === 0 ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="text-sm text-muted-foreground">
+                  {searchTerm
+                    ? "No students found"
+                    : "No students available to promote"}
+                </div>
+              </div>
+            ) : (
+              filteredUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className={`flex items-center gap-3 p-2 border-b cursor-pointer transition-colors ${
+                    selectedUser?.id === user.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-muted/50"
+                  }`}
+                  onClick={() => handleUserSelect(user)}
+                >
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="text-sm">
+                      {user.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm">{user.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {user.email}
+                    </div>
+                    {user.department && (
+                      <div className="text-xs text-muted-foreground">
+                        {user.department}
+                      </div>
+                    )}
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    User
+                  </Badge>
+                </div>
+              ))
+            )}
           </div>
 
           {/* Actions */}
@@ -239,6 +311,22 @@ export function PromoteUserDialog({
               />
             </div>
 
+            {/* Department Field */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 w-full sm:w-24">
+                <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                <Label className="text-xs">Department</Label>
+              </div>
+              <Input
+                value={formData.department}
+                onChange={(e) =>
+                  handleInputChange("department", e.target.value)
+                }
+                className="h-8 text-sm flex-1 w-full"
+                placeholder="CCIS - College of Computing and Information Sciences"
+              />
+            </div>
+
             {/* Phone Field */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
               <div className="flex items-center gap-2 w-full sm:w-24">
@@ -249,7 +337,23 @@ export function PromoteUserDialog({
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
                 className="h-8 text-sm flex-1 w-full"
-                placeholder="+1 (555) 123-4567"
+                placeholder="+63 99 123 4567"
+              />
+            </div>
+
+            {/* Specializations Field */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 w-full sm:w-24">
+                <UserIcon className="h-4 w-4 text-muted-foreground" />
+                <Label className="text-xs">Specializations</Label>
+              </div>
+              <Textarea
+                value={formData.specializationsInput}
+                onChange={(e) =>
+                  handleInputChange("specializationsInput", e.target.value)
+                }
+                className="text-sm flex-1 w-full min-h-[60px]"
+                placeholder="Machine Learning, Data Science, AI (comma separated)"
               />
             </div>
 

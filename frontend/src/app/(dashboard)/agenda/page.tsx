@@ -31,6 +31,8 @@ export default async function AgendaPage() {
     redirect("/login");
   }
 
+  const userRole = (session.user as any).role || "STUDENT";
+
   // Get bookings for the current user (either as student or faculty)
   const meetings = await getBookingsForUser(session.user.id);
 
@@ -38,7 +40,11 @@ export default async function AgendaPage() {
     <main className="flex-1 flex flex-col h-full overflow-hidden">
       <AgendaErrorBoundary>
         <Suspense fallback={<AgendaLoadingSkeleton />}>
-          <AgendaClient meetings={meetings} userId={session.user.id} />
+          <AgendaClient
+            meetings={meetings}
+            userId={session.user.id}
+            userRole={userRole}
+          />
         </Suspense>
       </AgendaErrorBoundary>
     </main>

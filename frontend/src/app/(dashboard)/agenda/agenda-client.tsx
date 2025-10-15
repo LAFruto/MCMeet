@@ -8,6 +8,7 @@ import { useAgendaView, useAgendaDataFromMeetings } from "./hooks";
 interface AgendaClientProps {
   meetings: Booking[];
   userId: string;
+  userRole: string;
 }
 
 /**
@@ -15,12 +16,18 @@ interface AgendaClientProps {
  *
  * Main client component for the agenda view.
  * Provides a clean, read-only view of the user's schedule.
- * No editing capabilities, focused on viewing and navigation.
+ * Students: View bookings and see booking request status (read-only)
+ * Faculty: View bookings and approve/deny requests
  *
  * @param meetings - Array of meetings from server
  * @param userId - Current user's ID for filtering
+ * @param userRole - User's role (STUDENT, FACULTY, ADMIN)
  */
-export function AgendaClient({ meetings, userId }: AgendaClientProps) {
+export function AgendaClient({
+  meetings,
+  userId,
+  userRole,
+}: AgendaClientProps) {
   usePageContext("agenda");
 
   // Initialize agenda view state
@@ -48,6 +55,7 @@ export function AgendaClient({ meetings, userId }: AgendaClientProps) {
         stats={stats}
         currentTimePosition={currentTimePosition}
         userId={userId}
+        userRole={userRole}
       />
     </div>
   );

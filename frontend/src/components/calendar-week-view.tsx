@@ -425,6 +425,21 @@ export function CalendarWeekView({
     link: "",
   });
 
+  // Edit booking form state
+  const [editBookingForm, setEditBookingForm] = useState<{
+    title: string;
+    startTime: string;
+    endTime: string;
+    location: string;
+    status: string;
+  }>({
+    title: "",
+    startTime: "",
+    endTime: "",
+    location: "",
+    status: "",
+  });
+
   // Filter states
   const [scheduleType, setScheduleType] = useState<ScheduleType>("all");
   const [selectedFaculty, setSelectedFaculty] = useState<string[]>([]);
@@ -613,15 +628,72 @@ export function CalendarWeekView({
     });
   }
 
-  function handleUpdateBooking() {
-    // TODO: Implement update booking logic
-    setEditMode(false);
-    setSelectedBooking(null);
+  async function handleUpdateBooking() {
+    if (!selectedBooking) return;
+
+    try {
+      // Combine date and time for startTime and endTime
+      const startDate = new Date(selectedBooking.startTime);
+      const [startHour, startMin] = editBookingForm.startTime.split(":");
+      startDate.setHours(parseInt(startHour), parseInt(startMin), 0, 0);
+
+      const endDate = new Date(selectedBooking.startTime);
+      const [endHour, endMin] = editBookingForm.endTime.split(":");
+      endDate.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
+
+      const response = await fetch(`/api/bookings/${selectedBooking.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: editBookingForm.title,
+          startTime: startDate.toISOString(),
+          endTime: endDate.toISOString(),
+          location: editBookingForm.location,
+          status: editBookingForm.status,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update booking");
+      }
+
+      // Close edit mode and refresh
+      setEditMode(false);
+      setSelectedBooking(null);
+      setOpenBookingId(null);
+
+      // Refresh to show updated data
+      window.location.reload();
+    } catch (error) {
+      console.error("Error updating booking:", error);
+      alert("Failed to update booking");
+    }
   }
 
-  function handleDeleteBooking() {
-    // TODO: Implement delete booking logic
-    setSelectedBooking(null);
+  async function handleDeleteBooking() {
+    if (!selectedBooking) return;
+
+    try {
+      const response = await fetch(`/api/bookings/${selectedBooking.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete booking");
+      }
+
+      // Close dialogs and refresh page to show updated data
+      setSelectedBooking(null);
+      setIsDeleteDialogOpen(false);
+
+      // Refresh the page to get updated bookings
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting booking:", error);
+      alert("Failed to delete booking");
+    }
   }
 
   function getBookingsForDate(date: Date) {
@@ -645,6 +717,17 @@ export function CalendarWeekView({
   }
 
   function renderBookingPopover(booking: Booking) {
+    // Initialize form when booking changes
+    if (editBookingForm.title === "" && booking) {
+      setEditBookingForm({
+        title: booking.title,
+        startTime: booking.startTime.toTimeString().slice(0, 5),
+        endTime: booking.endTime.toTimeString().slice(0, 5),
+        location: booking.location || "",
+        status: booking.status,
+      });
+    }
+
     return (
       <>
         <div className="space-y-3 max-h-[80vh] overflow-y-auto">
@@ -669,7 +752,13 @@ export function CalendarWeekView({
                 <Label className="text-xs">Title</Label>
               </div>
               <Input
-                defaultValue={booking.title}
+                value={editBookingForm.title}
+                onChange={(e) =>
+                  setEditBookingForm({
+                    ...editBookingForm,
+                    title: e.target.value,
+                  })
+                }
                 className="h-8 text-sm flex-1 w-full"
                 placeholder="Meeting title"
               />
@@ -741,13 +830,25 @@ export function CalendarWeekView({
               <div className="flex items-center gap-2 flex-1 w-full">
                 <Input
                   type="time"
-                  defaultValue={booking.startTime.toTimeString().slice(0, 5)}
+                  value={editBookingForm.startTime}
+                  onChange={(e) =>
+                    setEditBookingForm({
+                      ...editBookingForm,
+                      startTime: e.target.value,
+                    })
+                  }
                   className="h-8 text-sm flex-1"
                 />
                 <span className="text-xs text-muted-foreground">→</span>
                 <Input
                   type="time"
-                  defaultValue={booking.endTime.toTimeString().slice(0, 5)}
+                  value={editBookingForm.endTime}
+                  onChange={(e) =>
+                    setEditBookingForm({
+                      ...editBookingForm,
+                      endTime: e.target.value,
+                    })
+                  }
                   className="h-8 text-sm flex-1"
                 />
               </div>
@@ -803,7 +904,13 @@ export function CalendarWeekView({
                 <Label className="text-xs">Location</Label>
               </div>
               <Input
-                defaultValue={booking.location}
+                value={editBookingForm.location}
+                onChange={(e) =>
+                  setEditBookingForm({
+                    ...editBookingForm,
+                    location: e.target.value,
+                  })
+                }
                 className="h-8 text-sm flex-1 w-full"
                 placeholder="Add location"
               />
